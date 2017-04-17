@@ -1,8 +1,13 @@
+build/
+deps/
+glad/
+glm/
+soil/
+
 # Compiled Object files
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
