@@ -17,6 +17,9 @@ public:
 
   
 protected:
+	vec2 mousePos;
+
+	std::unique_ptr<Sphere> sphere;
 };
 }
 #endif
