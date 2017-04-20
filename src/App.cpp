@@ -19,6 +19,17 @@ void App::onEvent(shared_ptr<Event> event) {
 	}
 }
 
+vec3 App::mousePosToRay(mat4 view, mat4 projection) {
+	vec2 normalizedDeviceCoords((2 * mousePos.x) / (float)_windowWidth - 1,
+							  -((2 * mousePos.y) / (float)_windowHeight - 1));
+	vec4 rayPt = vec4(normalizedDeviceCoords, -1.0, 1.0);
+	vec4 camCoords = inverse(projection) * rayPt;
+	camCoords = vec4(camCoords.x, camCoords.y, -1.0, 0.0);
+
+	vec3 worldDir = vec3(inverse(view) * camCoords);
+	return normalize(worldDir);
+}
+
 void App::onRenderGraphics() {
     vec3 eye_world(-3,5,5);
     // Setup the camera with a good initial position and view direction to see the table
@@ -41,18 +52,11 @@ void App::onRenderGraphics() {
 	//Credit: http://antongerdelan.net/opengl/raycasting.html
 
 	//Generate ray
-	vec2 normalizedDeviceCoords(  (2 * mousePos.x) / (float)_windowWidth - 1, 
-								-((2 * mousePos.y) / (float)_windowHeight - 1));
-	vec4 rayPt = vec4(normalizedDeviceCoords, -1.0, 1.0);
-	vec4 camCoords = inverse(projection) * rayPt;
-	camCoords = vec4(camCoords.x, camCoords.y, -1.0, 0.0);
-
-	vec3 worldDir = vec3(inverse(view) * camCoords);
-	worldDir = normalize(worldDir);
+	vec3 worldRay = mousePosToRay(view, projection);
 
 	//Calculate ray intesection with y=0 plane
-	float t = -eye_world.y / worldDir.y;
-	vec3 pt = eye_world + (worldDir * t);
+	float t = -eye_world.y / worldRay.y;
+	vec3 pt = eye_world + (worldRay * t);
 	pt.y = 0;
 
 	//Draw sphere at point

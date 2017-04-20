@@ -17,6 +17,8 @@ public:
 
   
 protected:
+	vec3 mousePosToRay(mat4 view, mat4 projection);
+
 	vec2 mousePos;
 
 	std::unique_ptr<Sphere> sphere;
