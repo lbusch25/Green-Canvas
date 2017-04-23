@@ -17,15 +17,21 @@ namespace basicgraphics {
     using namespace glm;
     using namespace std;
     
+    //Takes in the position of the bottom point of the grass stalk and the direction of the wind
+    //vector that will be acting upon the grass. The grass is then built up directly vertical as
+    //a four point line strip from the input point.
     Grass::Grass(vec3 position, vec3 windDirection) {
+        //We will want to find a way to write the mesh without this so we can use the
+        //fragment shader to apply our grass texture to the grass.
         std::shared_ptr<Texture> tex = Texture::create2DTextureFromFile("lightingToon.jpg");
         
         std::vector<Mesh::Vertex> cpuVertexArray;
         std::vector<int> cpuIndexArray;
-        std::vector<std::shared_ptr<Texture>> textures;
+        std::vector<std::shared_ptr<Texture>> textures; //Same here, find a way to modify mesh.cpp
         
-        textures.push_back(tex);
+        textures.push_back(tex); //And here for mesh.cpp modification
         
+        //This calculates the position of all four points in our grass mesh
         std::vector<vec3> pointPositions;
         pointPositions.push_back(position);
         for(int i = 1; i < 4; i++) {
@@ -34,21 +40,28 @@ namespace basicgraphics {
         }
         
         for (int i = 0; i < pointPositions.size() - 1; i++) {
-            Mesh::Vertex currentVert;
-            Mesh::Vertex nextVert;
+            Mesh::Vertex currentVert; //The vertex we are working on
+            Mesh::Vertex nextVert; //The next vertex up
             
             currentVert.position = pointPositions[i];
             nextVert.position = pointPositions[i + 1];
             
+            //Calculates the vector from the current vertex to the next vertex up
+            //Has to be normalized for the projection calculation below
             currentVert.edgeVector = normalize(nextVert.position - currentVert.position);
+            
+            //Calculates a normalized wind value by finding the amount of the wind that is in a
+            //direction orthogonal to our edgeDirection (ie grass blade)
             currentVert.wVector = normalize(windDirection - dot(windDirection, currentVert.edgeVector)*windDirection);
+            
+            //Calculates the normal for our grass blade
             currentVert.normal = cross(currentVert.wVector, currentVert.edgeVector);
             
             cpuVertexArray.push_back(currentVert);
             cpuIndexArray.push_back(i);
         }
         
-        Mesh::Vertex lastVert;
+        Mesh::Vertex lastVert; //The end vertex of our grass blade
         Mesh::Vertex previousVert = cpuVertexArray[cpuVertexArray.size() - 1];
         
         lastVert.position = pointPositions[pointPositions.size() - 1];
