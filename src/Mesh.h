@@ -25,9 +25,14 @@ namespace basicgraphics {
 	class Mesh : public std::enable_shared_from_this<Mesh>
 	{
 	public:
+        //Note, I changed the structure of this vertex struct to include
+        //our Grass' edgeVector and w vector
+        //Lawson
 		struct Vertex {
 			glm::vec3 position;
-			glm::vec3 normal;
+            glm::vec3 edgeVector;
+            glm::vec3 wVector;
+            glm::vec3 normal;
 			glm::vec2 texCoord0;
 		};
 
