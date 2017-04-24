@@ -5,7 +5,7 @@ layout(line_strip) in;
 
 // ... and what type of primitive you are outputing and how many vertices. The geometry shader is run once
 // for each primitive so we will output three lines (6 vertices), one for each normal.
-layout(triangle_strip, max_vertices = 4) out;
+layout(triangle_strip, max_vertices = 12) out;
 
 uniform mat4 projection_mat, view_mat, model_mat;
 
@@ -29,9 +29,8 @@ void main() {
         gl_Position = projection_mat * view_mat * model_mat * (gl_in[i+1].gl_Position + vec4(0.1,0.0,0.0,0.0));
         EmitVertex();
         
-        
-        EndPrimitive(); //Tells the geometry shader that you are done calculating a primitive, and draws lines between its vertices and sends it to the fragment shader
     }
+    EndPrimitive(); //Tells the geometry shader that you are done calculating a primitive, and draws lines between its vertices and sends it to the fragment shader
 }
 
 

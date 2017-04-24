@@ -4,6 +4,7 @@
 #include "BaseApp.h"
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+#include "Grass.hpp"
 
 namespace basicgraphics {
 class App : public BaseApp {
@@ -22,6 +23,8 @@ protected:
 	vec2 mousePos;
 
 	std::unique_ptr<Sphere> sphere;
+    
+    std::unique_ptr<Grass> grass;
 };
 }
 #endif

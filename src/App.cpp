@@ -10,7 +10,8 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 
-	sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
+	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
+    grass.reset(new Grass(vec3(0), vec3(0)));
 }
 
 void App::onEvent(shared_ptr<Event> event) {
@@ -60,7 +61,9 @@ void App::onRenderGraphics() {
 	pt.y = 0;
 
 	//Draw sphere at point
-	sphere->draw(_shader, translate(mat4(1.0), pt) * scale(mat4(1.0), vec3(0.1)));
+	//sphere->draw(_shader, translate(mat4(1.0), pt) * scale(mat4(1.0), vec3(0.1)));
+    grass.reset(new Grass(pt, vec3(0)));
+    grass->draw(_shader);
 }
 }//namespace
 
