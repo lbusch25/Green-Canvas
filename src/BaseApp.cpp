@@ -63,6 +63,7 @@ namespace basicgraphics {
 		// Set up the shader
 		_shader.compileShader("texture.vert", GLSLShader::VERTEX);
 		_shader.compileShader("texture.frag", GLSLShader::FRAGMENT);
+        _shader.compileShader("grass.geom", GLSLShader::GEOMETRY); //Added geometry shader
 		_shader.link();
 		_shader.use();
 
