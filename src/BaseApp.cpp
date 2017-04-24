@@ -141,7 +141,7 @@ namespace basicgraphics {
 
 	void BaseApp::updateWindowSize()
 	{
-		glfwGetWindowSize(_window, &_windowWidth, &_windowHeight);
+		glfwGetFramebufferSize(_window, &_windowWidth, &_windowHeight);
 	}
 
 	void BaseApp::updateWindowPosition(int x, int y)
