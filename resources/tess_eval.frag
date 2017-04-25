@@ -12,7 +12,7 @@ vec3 bezier(vec3 p0, vec3 p1, vec3 p2, vec3 p3, float t) {
 
 void main() {
     float t = gl_TessCoord.x; //Tells us where we are in the line patch, only need x because it is a line
-    vec3 tesPosition = bezier(tcPosistion[0], tcPosition[1], tcPosition[2], tcPosition[3]);
+    vec3 tesPosition = bezier(tcPosistion[0], tcPosition[1], tcPosition[2], tcPosition[3], t);
     gl_Position = projection_mat * view_mat * vec4(tesPosition, 1.0);
     }
 }
