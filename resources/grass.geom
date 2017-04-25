@@ -18,19 +18,19 @@ uniform mat4 projection_mat, view_mat, model_mat;
 void draw_grass() {
     //Calculates the world coordinates by multiplying the local coordinates by the model, view, and projection matrices (in that order), using the built in gl_Position to hold the position
     //start vertex
-    gl_Position = projection_mat * view_mat * model_mat * gl_in[0].gl_Position;
+    gl_Position = projection_mat * view_mat * gl_in[0].gl_Position;
     EmitVertex();
     
     //next vertex
-    gl_Position = projection_mat * view_mat * model_mat * gl_in[1].gl_Position;
+    gl_Position = projection_mat * view_mat * gl_in[1].gl_Position;
     EmitVertex();
     
     //start + 0.1 vertex
-    gl_Position = projection_mat * view_mat * model_mat * (gl_in[0].gl_Position + vec4(0.1,0.0,0.0,0.0));
+    gl_Position = projection_mat * view_mat * (gl_in[0].gl_Position + vec4(0.1,0.0,0.0,0.0));
     EmitVertex();
     
     //next + 0.1 vertex
-    gl_Position = projection_mat * view_mat * model_mat * (gl_in[1].gl_Position + vec4(0.1,0.0,0.0,0.0));
+    gl_Position = projection_mat * view_mat  * (gl_in[1].gl_Position + vec4(0.1,0.0,0.0,0.0));
     EmitVertex();
     
     EndPrimitive(); //Tells the geometry shader that you are done calculating a primitive, and draws lines between its vertices and sends it to the fragment shader

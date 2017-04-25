@@ -11,15 +11,16 @@ uniform mat4 projection_mat, view_mat, model_mat;
 //out vec3 position_world, normal_world; //edgeVector_world, wVector_world;
 //out vec2 texture_coordinates;
 
-vec3 position_world;
 out vec3 vPosition;
 
 void main () {
-	position_world = vec3 (model_mat * vec4 (vertex_position, 1.0));
+	vec4 position_world = model_mat * vec4 (vertex_position, 1.0);
 //	normal_world = normalize(vec3 ( model_mat * vec4 (vertex_normal, 0.0)));
 ////    edgeVector_world = vec3(model_mat * vec3(vertex_edgeVector, 0.0));
 ////    wVector_world = vec3(model_mat * vec3(vertex_wVector, 0.0));
 //	texture_coordinates = vertex_texcoord;
 //	gl_Position = projection_mat * view_mat * vec4 (position_world, 1.0);
-    vPosition = position_world;
+    //vPosition = position_world;
+    vPosition = vec3(position_world);
+    gl_Position = position_world;
 }

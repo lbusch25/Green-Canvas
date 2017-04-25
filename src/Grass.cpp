@@ -35,7 +35,7 @@ namespace basicgraphics {
         std::vector<vec3> pointPositions;
         pointPositions.push_back(position);
         for(int i = 1; i < 4; i++) {
-            vec3 pointPosition = vec3(position.x, position.y + (i * 1/3 * _bladeLength), position.z);
+            vec3 pointPosition = vec3(position.x, position.y + (i * 1/3.0 * _bladeLength), position.z);
             pointPositions.push_back(pointPosition);
         }
         
@@ -82,6 +82,10 @@ namespace basicgraphics {
     Grass::~Grass() {};
     
     void Grass::draw(GLSLProgram &shader) {
-        _mesh->draw(shader);
+
+		glBindVertexArray(_mesh->getVAOID());
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
+		glDrawElements(GL_PATCHES, _mesh->getNumIndices(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
     }
 }
