@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 layout (location = 0) in vec3 vertex_position;
 layout (location = 1) in vec3 vertex_edgeVector;
@@ -12,6 +12,7 @@ uniform mat4 projection_mat, view_mat, model_mat;
 //out vec2 texture_coordinates;
 
 vec3 position_world;
+out vec3 vPosition;
 
 void main () {
 	position_world = vec3 (model_mat * vec4 (vertex_position, 1.0));
@@ -19,5 +20,6 @@ void main () {
 ////    edgeVector_world = vec3(model_mat * vec3(vertex_edgeVector, 0.0));
 ////    wVector_world = vec3(model_mat * vec3(vertex_wVector, 0.0));
 //	texture_coordinates = vertex_texcoord;
-	gl_Position = projection_mat * view_mat * vec4 (position_world, 1.0);
+//	gl_Position = projection_mat * view_mat * vec4 (position_world, 1.0);
+    vPosition = position_world;
 }

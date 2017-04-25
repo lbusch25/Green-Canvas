@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 // You must specify what type of primitive is passed in
 layout(lines) in;
