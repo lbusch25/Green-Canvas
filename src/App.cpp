@@ -12,6 +12,10 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
 	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
     grass.reset(new Grass(vec3(0), vec3(0)));
+	windSim.reset(new FluidSimulator(10, 10, 10));
+	windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
+
+	lastTime = glfwGetTime();
 }
 
 void App::onEvent(shared_ptr<Event> event) {
@@ -32,7 +36,13 @@ vec3 App::mousePosToRay(mat4 view, mat4 projection) {
 }
 
 void App::onRenderGraphics() {
-    vec3 eye_world(-3,5,5);
+	double curTime = glfwGetTime();
+	double dt = curTime - lastTime;
+	lastTime = curTime;
+
+	windSim->step(dt); 
+	
+	vec3 eye_world(-3,5,5);
     // Setup the camera with a good initial position and view direction to see the table
     glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     

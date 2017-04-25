@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include "Grass.hpp"
+#include "FluidSimulator.h"
 
 namespace basicgraphics {
 class App : public BaseApp {
@@ -25,6 +26,10 @@ protected:
 	std::unique_ptr<Sphere> sphere;
     
     std::unique_ptr<Grass> grass;
+
+	std::unique_ptr<FluidSimulator> windSim;
+
+	double lastTime;
 };
 }
 #endif
