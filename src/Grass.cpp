@@ -21,16 +21,10 @@ namespace basicgraphics {
     //vector that will be acting upon the grass. The grass is then built up directly vertical as
     //a four point line strip from the input point.
     Grass::Grass(vec3 position, vec3 windDirection) {
-        //We will want to find a way to write the mesh without this so we can use the
-        //fragment shader to apply our grass texture to the grass.
-        std::shared_ptr<Texture> tex = Texture::create2DTextureFromFile("lightingToon.jpg");
         
         std::vector<Mesh::Vertex> cpuVertexArray;
         std::vector<int> cpuIndexArray;
-        std::vector<std::shared_ptr<Texture>> textures; //Same here, find a way to modify mesh.cpp
-        
-        textures.push_back(tex); //And here for mesh.cpp modification
-        
+
         //This calculates the position of all four points in our grass mesh
         std::vector<vec3> pointPositions;
         pointPositions.push_back(position);
@@ -74,7 +68,7 @@ namespace basicgraphics {
         const int cpuVertexByteSize = sizeof(Mesh::Vertex) * cpuVertexArray.size();
         const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
         
-        _mesh.reset(new Mesh(textures, GL_LINE_STRIP, GL_STATIC_DRAW,
+        _mesh.reset(new Mesh(std::vector<std::shared_ptr<Texture>>(), GL_LINE_STRIP, GL_STATIC_DRAW,
                              cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray,
                              cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
     }
