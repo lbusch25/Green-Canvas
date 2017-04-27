@@ -19,9 +19,13 @@ public:
 
   
 protected:
+    const int GRASS_PER_SQUARE_EDGE = 100;
+    
 	vec3 mousePosToRay(mat4 view, mat4 projection);
 
 	vec2 mousePos;
+    
+    std::vector<std::unique_ptr<Grass>> grassBlades;
 
 	std::unique_ptr<Sphere> sphere;
     

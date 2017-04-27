@@ -16,6 +16,17 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 	windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
 
 	lastTime = glfwGetTime();
+    
+    //Generates a grass square centered around the origin
+    for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
+        vec3 grassPos = vec3(-1, 0, -1);
+        grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);
+        for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
+            grassPos.x += (i * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
+        }
+        Grass *grassBlade = new Grass(grassPos, vec3(0,0,0));
+        grassBlades.emplace_back(std::move(grassBlade));
+    }
 }
 
 void App::onEvent(shared_ptr<Event> event) {
@@ -74,6 +85,11 @@ void App::onRenderGraphics() {
 	//sphere->draw(_shader, translate(mat4(1.0), pt) * scale(mat4(1.0), vec3(0.1)));
     grass.reset(new Grass(pt, vec3(0)));
     grass->draw(_shader);
+    
+    //Draws our grass square 
+    for(int i = 0; i < grassBlades.size(); i++) {
+        grassBlades[i]->draw(_shader);
+    }
 }
 }//namespace
 

@@ -28,10 +28,15 @@ namespace basicgraphics {
         //This calculates the position of all four points in our grass mesh
         std::vector<vec3> pointPositions;
         pointPositions.push_back(position);
-        for(int i = 1; i < 4; i++) {
-            vec3 pointPosition = vec3(position.x, position.y + (i * 1/3.0 * _bladeLength), position.z);
-            pointPositions.push_back(pointPosition);
-        }
+        
+        vec3 position1 = position + vec3(0.25, 0.6, 0);
+        pointPositions.push_back(position1);
+        
+        vec3 position2 = position + vec3(0.6, 0.85, 0);
+        pointPositions.push_back(position2);
+        
+        vec3 position3 = position + vec3(0.75, 0.7, 0);
+        pointPositions.push_back(position3);
         
         for (int i = 0; i < pointPositions.size() - 1; i++) {
             Mesh::Vertex currentVert; //The vertex we are working on
