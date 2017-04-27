@@ -10,7 +10,7 @@ void main() {
 
         //Make TessLevelOuter a uniform variable (in geom shader uniform *2-1)
         //Determines number of subdivisions per line
-        gl_TessLevelOuter[0] = 10; //Tesselation in y for control points given (ie # of lines added)
+        gl_TessLevelOuter[0] = 1; //Tesselation in y for control points given (ie # of lines added)
         
         gl_TessLevelOuter[1] = 10; //Tesselation in x for line generated (only need 1 line for x since we are dividing based upon the y parameter)        
     }
