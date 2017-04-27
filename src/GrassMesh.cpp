@@ -49,6 +49,8 @@ namespace basicgraphics {
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
         
+        //Need to add edge vector and windvector as array attribute
+        
         // Create indexstream
         glGenBuffers(1, &_indexVBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexVBO);
