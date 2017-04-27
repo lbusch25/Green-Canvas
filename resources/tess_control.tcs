@@ -12,8 +12,8 @@ void main() {
         //Determines number of subdivisions per line
         gl_TessLevelOuter[0] = 10; //Tesselation in y for control points given (ie # of lines added)
         
-        gl_TessLevelOuter[1] = 1; //Tesselation in x for line generated (only need 1 line for x since we are dividing based upon the y parameter)
-
-        gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+        gl_TessLevelOuter[1] = 10; //Tesselation in x for line generated (only need 1 line for x since we are dividing based upon the y parameter)        
     }
+
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 }
