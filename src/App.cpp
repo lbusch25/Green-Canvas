@@ -19,13 +19,14 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
     
     //Generates a grass square centered around the origin
     for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
-        vec3 grassPos = vec3(-1, 0, -1);
-        grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);
-        for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
-            grassPos.x += (i * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
-        }
-        Grass *grassBlade = new Grass(grassPos, vec3(0,0,0));
-        grassBlades.emplace_back(std::move(grassBlade));
+		for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
+			vec3 grassPos = vec3(-1, 0, -1);
+			grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);       
+			grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
+        
+			Grass *grassBlade = new Grass(grassPos, vec3(0,0,0));
+			grassBlades.emplace_back(std::move(grassBlade));
+		}
     }
 }
 
