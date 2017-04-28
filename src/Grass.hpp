@@ -37,6 +37,7 @@ namespace basicgraphics {
         std::shared_ptr<glm::vec4> _color;
 
 		GrassControlPoint controlPoints[4];
+		GrassControlPoint staticStateControlPoints[4];
 		vec3 staticGrowthVector;
         
         glm::vec3 _edgeDirection;
