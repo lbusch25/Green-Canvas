@@ -17,19 +17,29 @@
 
 
 namespace basicgraphics {
+	struct GrassControlPoint {
+		vec3 pos;
+		vec3 vel;
+		vec3 normal;
+		vec3 wVec;
+		float stiffness;
+	};
     class Grass {
     public:
         Grass(glm::vec3 position, glm::vec3 windDirection);
         ~Grass();
         
         void draw(GLSLProgram &shader);
+		void doPhysicsStuff(vec3 velocityAtTip);
         
     protected:
         std::shared_ptr<Mesh> _mesh;
         std::shared_ptr<glm::vec4> _color;
+
+		GrassControlPoint controlPoints[4];
+		vec3 staticGrowthVector;
         
         glm::vec3 _edgeDirection;
-        glm::vec3 _wDirection;
         const float _bladeLength = 1;
     };
 }

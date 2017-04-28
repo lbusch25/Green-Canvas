@@ -79,6 +79,40 @@ namespace basicgraphics {
     }
     
     Grass::~Grass() {};
+
+	void Grass::doPhysicsStuff(vec3 velocityAtTip) {
+		float areaOfThrustSurfaceOfWind = 1;
+		float dragCoefficient = 1;
+		GrassControlPoint tip = controlPoints[3];
+
+		vec3 growthVec = controlPoints[3].pos - controlPoints[0].pos;
+		growthVec.y = 0; //project
+		
+		//Start at 1 because the root point can't swing
+		for (int i = 1; i < 4; i++) {
+			// Swinging
+			GrassControlPoint thisPt = controlPoints[i];
+
+			vec3 projectedSwingVel = dot(velocityAtTip, thisPt.wVec) * thisPt.wVec;
+			vec3 windForceSwinging = areaOfThrustSurfaceOfWind * dragCoefficient * projectedSwingVel;
+
+			float growthVecAngle = acos(dot(normalize(growthVec), normalize(this->staticGrowthVector)));
+			float growthVecAngleAdj = (tip.stiffness / thisPt.stiffness) * growthVecAngle;
+			vec3 restorationForce = tip.stiffness * growthVecAngleAdj * normalize(this->staticGrowthVector - growthVec);
+
+			vec3 totalSwingForce = windForceSwinging + restorationForce;
+			thisPt.vel += totalSwingForce;
+
+			// Bending
+			vec3 projectedBendVel = dot(velocityAtTip, thisPt.normal) * thisPt.normal;
+			vec3 windForceBending = areaOfThrustSurfaceOfWind * dragCoefficient * projectedBendVel;
+
+			// Twisting
+
+			// Finally...
+			thisPt.pos += thisPt.vel;
+		}
+	}
     
     void Grass::draw(GLSLProgram &shader) {
 
