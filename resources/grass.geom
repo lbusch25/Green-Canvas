@@ -13,7 +13,13 @@ layout(triangle_strip, max_vertices = 4) out;
 //out vec3 position_world[2], normal_world[2];
 //out vec2 texture_coordinates[2];
 
-uniform mat4 projection_mat, view_mat, model_mat;
+in vec3 tesInterpSurfNorm[2];
+in vec3 tesInterpSurfPos[2];
+
+//out vec3 geomInterpSurfNorm[];
+//out vec3 geomInterpSurfPos[];
+
+uniform mat4 projection_mat, view_mat;
 
 void draw_grass() {
     //Calculates the world coordinates by multiplying the local coordinates by the model, view, and projection matrices (in that order), using the built in gl_Position to hold the position
@@ -38,6 +44,10 @@ void draw_grass() {
 
 void main() {
     draw_grass();
+    
+//    for(int i = 0; i < 2; i++) {
+//        
+//    }
 }
 
 

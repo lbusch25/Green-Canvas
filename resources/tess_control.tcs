@@ -1,11 +1,15 @@
 #version 410
 
 layout(vertices = 4) out; //Four control points per patch
-in vec3[] vPosition;
-out vec3 tcPosition[];
+in vec3[] vInterpSurfPos;
+out vec3 tcInterpSurfPos[];
+
+in vec3[] vInterpSurfNorm;
+out vec3 tcInterpSurfNorm[];
 
 void main() {
-    tcPosition[gl_InvocationID] = vPosition[gl_InvocationID];
+    tcInterpSurfPos[gl_InvocationID] = vInterpSurfPos[gl_InvocationID];
+    tcInterpSurfNorm[gl_InvocationID] = vInterpSurfNorm[gl_InvocationID];
     if(gl_InvocationID == 0) { //Only have to define tessellation once per vertex patch
 
         //Make TessLevelOuter a uniform variable (in geom shader uniform *2-1)

@@ -79,6 +79,8 @@ void App::onRenderGraphics() {
     _shader.setUniform("projection_mat", projection);
     _shader.setUniform("model_mat", model);
     _shader.setUniform("eye_world", eye_world);
+    
+    _shader.setUniform("normal_mat", mat3(transpose(inverse(model)))); //Gives the normal in world coords
 
 
 	//Draw a sphere where the user's mouse is.

@@ -17,6 +17,7 @@
 
 
 namespace basicgraphics {
+    //Holds the data necessary to compute physics calculations on grass control points
 	struct GrassControlPoint {
 		vec3 pos;
 		vec3 vel;
@@ -36,7 +37,10 @@ namespace basicgraphics {
         std::shared_ptr<Mesh> _mesh;
         std::shared_ptr<glm::vec4> _color;
 
+        //The control points to be used and updated when a wind force is applied
 		GrassControlPoint controlPoints[4];
+        
+        //The default status of the grass, use when no wind force applied
 		GrassControlPoint staticStateControlPoints[4];
 		vec3 staticGrowthVector;
         
