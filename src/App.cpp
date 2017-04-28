@@ -33,10 +33,17 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
-    } if (event-> getName() == "mouse_btn_left") {
-        Grass *userBlade = new Grass(pt, vec3(0, 0, 0));
-        userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
+		if (mouseDown) {
+			Grass *userBlade = new Grass(pt, vec3(0, 0, 0));
+			userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
+		}
     }
+	if (event-> getName() == "mouse_btn_left_down") {
+		mouseDown = true;
+    }
+	if (event->getName() == "mouse_btn_left_up") {
+		mouseDown = false;
+	}
 }
 
 vec3 App::mousePosToRay(mat4 view, mat4 projection) {
@@ -55,7 +62,7 @@ void App::onRenderGraphics() {
 	double dt = curTime - lastTime;
 	lastTime = curTime;
 
-	windSim->step(dt); 
+	//windSim->step(dt); 
 	
 	vec3 eye_world(-3,5,5);
     // Setup the camera with a good initial position and view direction to see the table
@@ -87,8 +94,8 @@ void App::onRenderGraphics() {
 
 	//Draw sphere at point
 	//sphere->draw(_shader, translate(mat4(1.0), pt) * scale(mat4(1.0), vec3(0.1)));
-    grass.reset(new Grass(pt, vec3(0)));
-    grass->draw(_shader);
+    //grass.reset(new Grass(pt, vec3(0)));
+    //grass->draw(_shader);
     
     //Draws our grass square 
     for(int i = 0; i < grassBlades.size(); i++) {

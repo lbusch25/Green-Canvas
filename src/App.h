@@ -19,7 +19,7 @@ public:
 
   
 protected:
-    const int GRASS_PER_SQUARE_EDGE = 100;
+    const int GRASS_PER_SQUARE_EDGE = 1;
     
 	vec3 mousePosToRay(mat4 view, mat4 projection);
 
@@ -38,6 +38,8 @@ protected:
 	std::unique_ptr<FluidSimulator> windSim;
 
 	double lastTime;
+
+	bool mouseDown;
 };
 }
 #endif
