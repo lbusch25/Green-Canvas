@@ -12,10 +12,6 @@ namespace basicgraphics {
 		densitySources = std::vector<float>(X_SIZE * Y_SIZE * Z_SIZE);
 	}
 
-	//bool FluidSimulator::isEdge(int x, int y, int z) {
-	//	return x == 0 || y == 0 || z == 0 || x == X_SIZE-1 || y == Y_SIZE-1 || z < Z_SIZE-1;
-	//}
-
 	bool FluidSimulator::isValidCoord(int x, int y, int z) {
 		return x >= 0 && y >= 0 && z >= 0 && x < X_SIZE && y < Y_SIZE && z < Z_SIZE;
 	}
@@ -37,18 +33,60 @@ namespace basicgraphics {
 	}
 
 	void FluidSimulator::addVelocitySource(int x, int y, int z, glm::vec3 dir) {
-		//if (isEdge(x, y, z))
-		//	throw std::exception();
 		velocitySources[index(x, y, z)] += dir;
 	}
 	void FluidSimulator::addDensitySource(int x, int y, int z, float amount) {
-		//if (isEdge(x, y, z))
-		//	throw std::exception();
 		densitySources[index(x, y, z)] += amount;
 	}
 
 	vec3 FluidSimulator::velocityAt(int x, int y, int z) {
 		return velocities[index(x, y, z)];
+	}
+
+	glm::vec3 FluidSimulator::sampleVelocity(glm::vec3 coord) {
+		return sampleBilinear(velocities, coord);
+	}
+
+	template<typename T>
+	T FluidSimulator::sampleBilinear(std::vector<T> data, glm::vec3 pos) {
+		int x0 = int(pos.x), x1 = x0 + 1;
+		int y0 = int(pos.y), y1 = y0 + 1;
+		int z0 = int(pos.z), z1 = z0 + 1;
+		float xMix = x1 - pos.x;
+		float yMix = y1 - pos.y;
+		float zMix = z1 - pos.z;
+		
+		T interpolated =
+			glm::mix(
+				glm::mix(
+					glm::mix(
+						data[indexWithWrap(x0, y0, z0)],
+						data[indexWithWrap(x0, y0, z1)],
+						zMix
+					),
+					glm::mix(
+						data[indexWithWrap(x0, y1, z0)],
+						data[indexWithWrap(x0, y1, z1)],
+						zMix
+					),
+					yMix
+				),
+				glm::mix(
+					glm::mix(
+						data[indexWithWrap(x1, y0, z0)],
+						data[indexWithWrap(x1, y0, z1)],
+						zMix
+					),
+					glm::mix(
+						data[indexWithWrap(x1, y1, z0)],
+						data[indexWithWrap(x1, y1, z1)],
+						zMix
+					),
+					yMix
+				),
+				xMix
+			);
+		return interpolated;
 	}
 
 	void FluidSimulator::step(float dt) {
@@ -98,9 +136,6 @@ namespace basicgraphics {
 					}
 				}
 			}
-			//if (typeid(T) == typeid(glm::vec3)) {
-			//	setBounds(initialGuess);
-			//}
 		}
 	}
 
@@ -114,45 +149,7 @@ namespace basicgraphics {
 				for (int z = 0; z < Z_SIZE; z++) {
 					vec3 prevPos = vec3(x, y, z) - (dtAdj*vels[index(x, y, z)]);
 
-					int x0 = int(prevPos.x), x1 = x0 + 1;
-					int y0 = int(prevPos.y), y1 = y0 + 1;
-					int z0 = int(prevPos.z), z1 = z0 + 1;
-					float xMix = x1 - prevPos.x;
-					float yMix = y1 - prevPos.y;
-					float zMix = z1 - prevPos.z;
-					
-					//Mix together the 8 values
-					T interpolated =
-						glm::mix(
-							glm::mix(
-								glm::mix(
-									prev[indexWithWrap(x0, y0, z0)],
-									prev[indexWithWrap(x0, y0, z1)],
-									zMix
-								),
-								glm::mix(
-									prev[indexWithWrap(x0, y1, z0)],
-									prev[indexWithWrap(x0, y1, z1)],
-									zMix
-								),
-								yMix
-							),
-							glm::mix(
-								glm::mix(
-									prev[indexWithWrap(x1, y0, z0)],
-									prev[indexWithWrap(x1, y0, z1)],
-									zMix
-								),
-								glm::mix(
-									prev[indexWithWrap(x1, y1, z0)],
-									prev[indexWithWrap(x1, y1, z1)],
-									zMix
-								),
-								yMix
-							),
-							xMix
-						);
-					outAdvected[index(x, y, z)] = interpolated;
+					outAdvected[index(x, y, z)] = sampleBilinear(prev, prevPos);
 				}
 			}
 		}
@@ -191,9 +188,6 @@ namespace basicgraphics {
 					}
 				}
 			}
-			//if (typeid(T) == typeid(glm::vec3)) {
-			//	setBounds(initialGuess);
-			//}
 		}
 
 		for (int x = 0; x < X_SIZE; x++) {
@@ -206,59 +200,4 @@ namespace basicgraphics {
 			}
 		}
 	}
-
-	//void FluidSimulator::setBounds(std::vector<glm::vec3> velocityData) {
-	//	//any edge parts not set will be 0
-	//	
-	//	for (int x = 1; x < X_SIZE - 1; x++) {
-	//		for (int y = 1; y < Y_SIZE - 1; y++) {
-	//			velocityData[index(x, y, 0)].x = velocityData[index(x, y, 1)].x;
-	//			velocityData[index(x, y, 0)].y = velocityData[index(x, y, 1)].y;
-
-	//			velocityData[index(x, y, Z_SIZE - 1)].x = velocityData[index(x, y, Z_SIZE - 2)].x;
-	//			velocityData[index(x, y, Z_SIZE - 1)].y = velocityData[index(x, y, Z_SIZE - 2)].y;
-	//		}
-	//	}
-
-	//	for (int x = 1; x < X_SIZE - 1; x++) {
-	//		for (int z = 1; z < Z_SIZE - 1; z++) {
-	//			velocityData[index(x, 0, z)].x = velocityData[index(x, 1, z)].x;
-	//			velocityData[index(x, 0, z)].z = velocityData[index(x, 1, z)].z;
-
-	//			velocityData[index(x, Y_SIZE - 1, z)].x = velocityData[index(x, Y_SIZE - 2, z)].x;
-	//			velocityData[index(x, Y_SIZE - 1, z)].z = velocityData[index(x, Y_SIZE - 2, z)].z;
-	//		}
-	//	}
-
-	//	for (int y = 1; y < Y_SIZE - 1; y++) {
-	//		for (int z = 1; z < Z_SIZE - 1; z++) {
-	//			velocityData[index(0, y, z)].y = velocityData[index(1, y, z)].y;
-	//			velocityData[index(0, y, z)].z = velocityData[index(1, y, z)].z;
-
-	//			velocityData[index(X_SIZE - 1, y, z)].y = velocityData[index(X_SIZE - 2, y, z)].y;
-	//			velocityData[index(X_SIZE - 1, y, z)].z = velocityData[index(X_SIZE - 2, y, z)].z;
-	//		}
-	//	}
-
-	//	for (int x = 1; x < X_SIZE - 1; x++) {
-	//		velocityData[index(x, 0, 0)].x = velocityData[index(x, 1, 1)].x;
-	//		velocityData[index(x, Y_SIZE - 1, 0)].x = velocityData[index(x, Y_SIZE - 2, 1)].x;
-	//		velocityData[index(x, 0, Z_SIZE - 1)].x = velocityData[index(x, 0, Z_SIZE - 2)].x;
-	//		velocityData[index(x, Y_SIZE - 1, Z_SIZE - 1)].x = velocityData[index(x, Y_SIZE - 2, Z_SIZE - 2)].x;
-	//	}
-
-	//	for (int y = 1; y < Y_SIZE - 1; y++) {
-	//		velocityData[index(0, y, 0)].y = velocityData[index(1, y, 1)].y;
-	//		velocityData[index(X_SIZE - 1, y, 0)].y = velocityData[index(X_SIZE - 2, y, 1)].y;
-	//		velocityData[index(0, y, Z_SIZE - 1)].y = velocityData[index(1, y, Z_SIZE - 2)].y;
-	//		velocityData[index(X_SIZE - 1, y, Z_SIZE - 1)].y = velocityData[index(X_SIZE - 2, y, Z_SIZE - 2)].y;
-	//	}
-
-	//	for (int z = 1; z < Z_SIZE - 1; z++) {
-	//		velocityData[index(0, 0, z)].z = velocityData[index(1, 1, z)].z;
-	//		velocityData[index(x, Y_SIZE - 1, 0)].z = velocityData[index(x, Y_SIZE - 2, 1)].z;
-	//		velocityData[index(x, 0, Z_SIZE - 1)].z = velocityData[index(x, 0, Z_SIZE - 2)].z;
-	//		velocityData[index(x, Y_SIZE - 1, Z_SIZE - 1)].z = velocityData[index(x, Y_SIZE - 2, Z_SIZE - 2)].z;
-	//	}
-	//}
 }

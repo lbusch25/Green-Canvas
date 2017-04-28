@@ -13,6 +13,8 @@ namespace basicgraphics {
 		void addDensitySource(int x, int y, int z, float amount);
 
 		glm::vec3 velocityAt(int x, int y, int z);
+		glm::vec3 sampleVelocity(glm::vec3 coord);
+
 	private:
 		int X_SIZE;
 		int Y_SIZE;
@@ -26,7 +28,9 @@ namespace basicgraphics {
 		std::vector<glm::vec3> velocitySources;
 		std::vector<float> densitySources;
 
-		//bool isEdge(int x, int y, int z);
+		template<typename T>
+		T sampleBilinear(std::vector<T> data, glm::vec3 pos);
+
 		bool isValidCoord(int x, int y, int z);
 		int index(int x, int y, int z);
 		int indexWithWrap(int x, int y, int z);
@@ -41,8 +45,6 @@ namespace basicgraphics {
 		void advect(std::vector<T>& outAdvected, std::vector<T>& prev, std::vector<glm::vec3>& vels, float dt);
 
 		void project(std::vector<glm::vec3>& vels);
-
-		//void setBounds(std::vector<glm::vec3> velocityData);
 	};
 }
 
