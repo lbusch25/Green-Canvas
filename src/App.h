@@ -25,7 +25,11 @@ protected:
 
 	vec2 mousePos;
     
+    vec3 pt;
+    
     std::vector<std::unique_ptr<Grass>> grassBlades;
+    
+    std::vector<std::unique_ptr<Grass>> userGrass;
 
 	std::unique_ptr<Sphere> sphere;
     

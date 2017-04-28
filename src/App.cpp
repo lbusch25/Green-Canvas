@@ -25,7 +25,7 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 			grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
         
 			Grass *grassBlade = new Grass(grassPos, vec3(0,0,0));
-			grassBlades.emplace_back(std::move(grassBlade));
+			grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
 		}
     }
 }
@@ -33,7 +33,10 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
-	}
+    } if (event-> getName() == "mouse_btn_left") {
+        Grass *userBlade = new Grass(pt, vec3(0, 0, 0));
+        userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
+    }
 }
 
 vec3 App::mousePosToRay(mat4 view, mat4 projection) {
@@ -79,7 +82,7 @@ void App::onRenderGraphics() {
 
 	//Calculate ray intesection with y=0 plane
 	float t = -eye_world.y / worldRay.y;
-	vec3 pt = eye_world + (worldRay * t);
+	pt = eye_world + (worldRay * t);
 	pt.y = 0;
 
 	//Draw sphere at point
@@ -90,6 +93,10 @@ void App::onRenderGraphics() {
     //Draws our grass square 
     for(int i = 0; i < grassBlades.size(); i++) {
         grassBlades[i]->draw(_shader);
+    }
+    
+    for(int i = 0; i < userGrass.size(); i++) {
+        userGrass[i]->draw(_shader);
     }
 }
 }//namespace
