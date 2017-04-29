@@ -23,6 +23,6 @@ void main () {
 //	gl_Position = projection_mat * view_mat * vec4 (position_world, 1.0);
     //vPosition = position_world;
     vInterpSurfPos = vec3(position_world);
-    vInterpSurfNorm = normal_mat * vertex_normal;
+    vInterpSurfNorm = vec3(normal_mat * vec4(vertex_normal, 0.0));
     gl_Position = position_world;
 }

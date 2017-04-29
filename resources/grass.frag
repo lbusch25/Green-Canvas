@@ -35,13 +35,13 @@ void main () {
     vec2 specularTex = vec2(pow(max(0,dotHN), specularExp), 0.0);
     
     vec3 ambientColor = ambientReflection * ambientIntensity;
-    vec3 diffuseColor = vec3 diffuseColor = diffuseReflection * diffuseIntensity * texture(diffuseRamp, diffuseTex).xyz;
+    vec3 diffuseColor = diffuseReflection * diffuseIntensity * texture(diffuseRamp, diffuseTex).xyz;
 //    vec3 specularColor = vec3 specularColor = specularReflection *specularIntensity * texture(specularRamp, specularTex).xyz;
     
     
 //    final_colour = ambientColor + diffuseColor + specularColor;
     
-    final_colour = ambientColor + diffuseColor;
+    final_color = ambientColor + diffuseColor;
 	
-    fragment_colour = vec4(final_colour, 1.0);
+    fragment_colour = vec4(final_color, 1.0);
 }
