@@ -85,32 +85,71 @@ namespace basicgraphics {
 		float dragCoefficient = 1;
 		GrassControlPoint tip = controlPoints[3];
 
+		vec3 staticGrowthVector = staticStateControlPoints[3].pos - staticStateControlPoints[0].vel;
 		vec3 growthVec = controlPoints[3].pos - controlPoints[0].pos;
 		growthVec.y = 0; //project
+		float growthVecAngularDisp = acos(dot(normalize(growthVec), normalize(staticGrowthVector)));
+
+		//Bending angular displacement
+		float staticBendAngularDisp = asin(normalize(staticStateControlPoints[3].pos - staticStateControlPoints[2].pos).y);
+		float currentBendAngularDisp = asin(normalize(controlPoints[3].pos - controlPoints[2].pos).y);
+
+		float currentBendAngularTwist = acos(dot(normalize(staticStateControlPoints[3].wWithTwist), normalize(controlPoints[3].wWithTwist)));
 		
 		//Start at 1 because the root point can't swing
-		for (int i = 1; i < 4; i++) {
-			// Swinging
-			GrassControlPoint thisPt = controlPoints[i];
+		for (int edge = 0; edge < 3; edge++) {
+			GrassControlPoint edgePtLower = controlPoints[edge];
+			GrassControlPoint edgePtHigher = controlPoints[edge + 1];
+			GrassControlPoint edgePtLowerStatic = staticStateControlPoints[edge];
+			GrassControlPoint edgePtHigherStatic = staticStateControlPoints[edge + 1];
 
-			vec3 projectedSwingVel = dot(velocityAtTip, thisPt.wVec) * thisPt.wVec;
+			////////// Swinging //////////
+			// Wind force
+			vec3 projectedSwingVel = dot(velocityAtTip, edgePtHigher.wWithoutTwist) * edgePtHigher.wWithoutTwist;
 			vec3 windForceSwinging = areaOfThrustSurfaceOfWind * dragCoefficient * projectedSwingVel;
 
-			float growthVecAngle = acos(dot(normalize(growthVec), normalize(this->staticGrowthVector)));
-			float growthVecAngleAdj = (tip.stiffness / thisPt.stiffness) * growthVecAngle;
-			vec3 restorationForce = tip.stiffness * growthVecAngleAdj * normalize(this->staticGrowthVector - growthVec);
+			// Restoration force
+			float growthVecAnglularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * growthVecAngularDisp;
+			vec3 restorationForceSwing = tip.stiffness * growthVecAnglularDispAdj * normalize(staticGrowthVector - growthVec);
 
-			vec3 totalSwingForce = windForceSwinging + restorationForce;
-			thisPt.vel += totalSwingForce;
+			// Total
+			vec3 totalSwingForce = windForceSwinging + restorationForceSwing;
 
-			// Bending
-			vec3 projectedBendVel = dot(velocityAtTip, thisPt.normal) * thisPt.normal;
+			////////// Bending //////////
+			vec3 staticEdgeVec = edgePtLowerStatic.pos - edgePtHigherStatic.pos;
+			vec3 edgeVec = edgePtLower.pos - edgePtHigher.pos;
+			vec3 edgeNormalWithoutTwist = cross(edgePtLower.wWithoutTwist, edgeVec);
+			bool windIsTowardsNormal = dot(velocityAtTip, edgeNormalWithoutTwist) > 0;
+
+			// Wind force
+			vec3 projectedBendVel = dot(velocityAtTip, edgeNormalWithoutTwist) * edgeNormalWithoutTwist;
 			vec3 windForceBending = areaOfThrustSurfaceOfWind * dragCoefficient * projectedBendVel;
 
-			// Twisting
+			// Restoration force
+			float currentBendAngularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * currentBendAngularDisp;		
+			vec3 restorationForceBending = tip.stiffness * growthVecAnglularDispAdj * normalize(staticEdgeVec - edgeVec);
 
-			// Finally...
-			thisPt.pos += thisPt.vel;
+			// Total
+			vec3 totalBendForce = windForceBending + restorationForceBending;
+
+			////////// Twisting //////////
+			vec3 edgeNormalWithTwist = cross(edgePtLower.wWithTwist, edgeVec);
+
+			// Wind force
+			vec3 projectedTwistVel = dot(velocityAtTip, edgeNormalWithTwist) * edgeNormalWithTwist;
+			vec3 windForceTwist = areaOfThrustSurfaceOfWind * dragCoefficient * projectedTwistVel;
+			
+			// Restoration force
+			float currentTwistAngularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * currentBendAngularTwist;
+			vec3 restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(edgePtHigher.wWithoutTwist - edgePtHigher.wWithTwist);
+
+			// Total
+			vec3 totalTwistForce = windForceTwist + restorationForceTwist
+			////////// Finally... //////////
+			//do total force
+			//update vel
+			//update pos
+			//update normal, w
 		}
 	}
     
