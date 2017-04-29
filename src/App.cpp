@@ -17,6 +17,14 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
 	lastTime = glfwGetTime();
     
+    diffuseRamp = Texture::create2DTextureFromFile("lightingToon.jpg");
+    diffuseRamp->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    diffuseRamp->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    
+//    specularRamp = Texture::create2DTextureFromFile("lightingToon.jpg");
+//    specularRamp->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    specularRamp->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    
     //Generates a grass square centered around the origin
     for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
 		for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
@@ -80,9 +88,37 @@ void App::onRenderGraphics() {
     _shader.setUniform("model_mat", model);
     _shader.setUniform("eye_world", eye_world);
     
+    diffuseRamp->bind(0); //Binds our diffuse texture to our first texture
+    _shader.setUniform("diffuseRamp", 0);
+//    specularRamp->bind(1);
+//    _shader.setUniform("specularRamp", 1);
+    
     _shader.setUniform("normal_mat", mat3(transpose(inverse(model)))); //Gives the normal in world coords
 
-
+    //Properties of our grass surface, we can adjust these for a more realistic grass later
+    vec3 ambientReflectionCoeff = vec3(1,1,1);
+    vec3 diffuseReflectionCoeff = vec3(1,1,1);
+//    vec3 specularReflectionCoeff = vec3(1,1,1);
+//    float specularExponent = 50.0;
+    
+    //Intensity for our white light
+    vec3 ambientLightIntensity = vec3(0.4, 0.4, 0.4);
+    vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
+//    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
+    
+    //Light position is defined in App.h as a constant vec4
+    _shader.setUniform("lightPosition", lightPosition);
+    
+    _shader.setUniform("ambientReflection", ambientReflectionCoeff);
+    _shader.setUniform("diffuseReflection", diffuseReflectionCoeff);
+//    _shader.setUniform("specularReflection", specularReflectionCoeff);
+//    _shader.setUniform("specularExp", specularExponent);
+    
+    _shader.setUniform("ambientIntensity", ambientLightIntensity);
+    _shader.setUniform("diffuseIntensity", diffuseLightIntensity);
+//    _shader.setUniform("specularIntensity", specularLightIntensity);
+    
+    
 	//Draw a sphere where the user's mouse is.
 	//Credit: http://antongerdelan.net/opengl/raycasting.html
 

@@ -7,17 +7,11 @@ layout(lines) in;
 // for each primitive so we will output three lines (6 vertices), one for each normal.
 layout(triangle_strip, max_vertices = 4) out;
 
-//in vec3 position_world[2], normal_world[2];
-//in vec2 texture_coordinates[2];
-//
-//out vec3 position_world[2], normal_world[2];
-//out vec2 texture_coordinates[2];
+in vec3 tesInterpSurfNorm[]; //Might need a 2 in here
+in vec3 tesInterpSurfPos[];
 
-in vec3 tesInterpSurfNorm[2];
-in vec3 tesInterpSurfPos[2];
-
-//out vec3 geomInterpSurfNorm[];
-//out vec3 geomInterpSurfPos[];
+out vec3 geomInterpSurfNorm;
+out vec3 geomInterpSurfPos;
 
 uniform mat4 projection_mat, view_mat;
 
@@ -25,18 +19,26 @@ void draw_grass() {
     //Calculates the world coordinates by multiplying the local coordinates by the model, view, and projection matrices (in that order), using the built in gl_Position to hold the position
     //start vertex
     gl_Position = projection_mat * view_mat * gl_in[0].gl_Position;
+    geomInterpSurfNorm = tesInterpSurfNorm[0];
+    geomInterpSurfPos = tesInterpSurfPos[0];
     EmitVertex();
     
     //next vertex
     gl_Position = projection_mat * view_mat * gl_in[1].gl_Position;
+    geomInterpSurfNorm = tesInterpSurfNorm[1];
+    geomInterpSurfPos = tesInterpSurfPos[1];
     EmitVertex();
     
     //start + 0.1 vertex
     gl_Position = projection_mat * view_mat * (gl_in[0].gl_Position + vec4(0.1,0.0,0.0,0.0));
+    geomInterpSurfNorm = tesInterpSurfNorm[0];
+    geomInterpSurfPos = tesInterpSurfPos[0];
     EmitVertex();
     
     //next + 0.1 vertex
     gl_Position = projection_mat * view_mat  * (gl_in[1].gl_Position + vec4(0.1,0.0,0.0,0.0));
+    geomInterpSurfNorm = tesInterpSurfNorm[1];
+    geomInterpSurfPos = tesInterpSurfPos[1];
     EmitVertex();
     
     EndPrimitive(); //Tells the geometry shader that you are done calculating a primitive, and draws lines between its vertices and sends it to the fragment shader
@@ -44,10 +46,6 @@ void draw_grass() {
 
 void main() {
     draw_grass();
-    
-//    for(int i = 0; i < 2; i++) {
-//        
-//    }
 }
 
 
