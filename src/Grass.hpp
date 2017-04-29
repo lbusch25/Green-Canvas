@@ -21,8 +21,9 @@ namespace basicgraphics {
 	struct GrassControlPoint {
 		vec3 pos;
 		vec3 vel;
-		vec3 normal;
-		vec3 wVec;
+		//vec3 normal;
+		vec3 wWithoutTwist;
+		vec3 wWithTwist;
 		float stiffness;
 	};
     class Grass {
@@ -42,9 +43,7 @@ namespace basicgraphics {
         
         //The default status of the grass, use when no wind force applied
 		GrassControlPoint staticStateControlPoints[4];
-		vec3 staticGrowthVector;
-        
-        glm::vec3 _edgeDirection;
+
         const float _bladeLength = 1;
     };
 }
