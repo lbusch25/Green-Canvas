@@ -4,8 +4,15 @@ layout(isolines) in; //Tells shader that it is tessellation line objects
 in vec3[] tcInterpSurfPos;
 in vec3[] tcInterpSurfNorm;
 
-out vec3 tesInterpSurfPos[];
-out vec3 tesInterpSurfNorm[];
+out vec3 tesInterpSurfPos;
+out vec3 tesInterpSurfNorm;
+
+vec3 interpVec(vec3 p1, vec3 p2, vec3 p3, vec3 p4, float t, float y) {
+    vec3 P1 = mix(p1, p2, t);
+    vec3 P2 = mix(p3, p4, t);
+    vec3 interpV = mix(P2, P1, y);
+    return interpV;
+}
 
 vec3 bezier(vec3 p0, vec3 p1, vec3 p2, vec3 p3, float t) {
     vec3 position = pow((1.0-t), 3.0) * p0 + 3.0 * pow((1.0-t), 2.0) * t * p1 +
@@ -14,8 +21,11 @@ vec3 bezier(vec3 p0, vec3 p1, vec3 p2, vec3 p3, float t) {
 }
 
 void main() {
-    tesInterpSurfPos[gl_InvocationID] = tcInterpSurfPos[gl_InvocationID];
-    tesInterpSurfNorm[gl_InvocationID] = tcInterpSurfNorm[gl_InvocationID];
+    //tesInterpSurfPos = tcInterpSurfPos[0] * gl_TessCoord.x + tcInterpSurfPos[1] * gl_TessCoord.y;
+    //tesInterpSurfNorm = tcInterpSurfNorm[0] * gl_TessCoord.x + tcInterpSurfNorm[1] * gl_TessCoord.y;
+
+    tesInterpSurfPos = interpVec(tcInterpSurfPos[0], tcInterpSurfPos[1], tcInterpSurfPos[2], tcInterpSurfPos[3], gl_TessCoord.x, gl_TessCoord.y);
+    tesInterpSurfNorm = interpVec(tcInterpSurfNorm[0], tcInterpSurfNorm[1], tcInterpSurfNorm[2], tcInterpSurfNorm[3], gl_TessCoord.x, gl_TessCoord.y);
 
     vec3 p0 = gl_in[0].gl_Position.xyz;
     vec3 p1 = gl_in[1].gl_Position.xyz;
