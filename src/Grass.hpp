@@ -14,6 +14,7 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include "Mesh.h"
+#include "GrassMesh.hpp"
 
 
 namespace basicgraphics {
@@ -35,7 +36,8 @@ namespace basicgraphics {
 		void doPhysicsStuff(vec3 velocityAtTip);
         
     protected:
-        std::shared_ptr<Mesh> _mesh;
+//        std::shared_ptr<Mesh> _mesh;
+        std::shared_ptr<GrassMesh> _mesh;
         std::shared_ptr<glm::vec4> _color;
 
         //The control points to be used and updated when a wind force is applied

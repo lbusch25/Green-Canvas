@@ -27,9 +27,15 @@ protected:
     
     vec3 pt;
     
+    const vec4 lightPosition = vec4(-20, 20, -20, 1.0);
+    
     std::vector<std::unique_ptr<Grass>> grassBlades;
     
     std::vector<std::unique_ptr<Grass>> userGrass;
+    
+    std::shared_ptr<Texture> diffuseRamp;
+    
+    std::shared_ptr<Texture> specularRamp;
 
 	std::unique_ptr<Sphere> sphere;
     

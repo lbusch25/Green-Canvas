@@ -11,9 +11,8 @@
 
 namespace basicgraphics {
     
-    Mesh::Mesh(std::vector<std::shared_ptr<Texture>> textures, GLenum primitiveType, GLenum usage, int allocateVertexByteSize, int allocateIndexByteSize, int vertexOffset, const std::vector<Vertex> &data, int numIndices /*=0*/, int indexByteSize/*=0*/, int* index/*=nullptr*/)
+    GrassMesh::GrassMesh(GLenum primitiveType, GLenum usage, int allocateVertexByteSize, int allocateIndexByteSize, int vertexOffset, const std::vector<Vertex> &data, int numIndices /*=0*/, int indexByteSize/*=0*/, int* index/*=nullptr*/)
     {
-        _textures = textures;
         
         _materialColor = glm::vec4(1.0);
         
@@ -47,8 +46,17 @@ namespace basicgraphics {
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, edgeVector));
         
+        //This uses a void pointer, useful because it can be cast to values of any data type
+        //However, to dereference, we must first cast it to a specific point data type
+        //IE void *data = &x; then to dereference int *intPtr = static_cast<*int>(data)
+        
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, wVector));
+        
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
         //Need to add edge vector and windvector as array attribute
         
         // Create indexstream
@@ -66,7 +74,7 @@ namespace basicgraphics {
         glBindVertexArray(0);
     }
     
-    Mesh::~Mesh()
+    GrassMesh::~GrassMesh()
     {
         //Assumes object is deleted with the correct context current
         glDeleteBuffers(1, &_vertexVBO);
@@ -74,26 +82,26 @@ namespace basicgraphics {
         glDeleteVertexArrays(1, &_vaoID);
     }
     
-    void Mesh::draw(GLSLProgram &shader) {
+    void GrassMesh::draw(GLSLProgram &shader) {
         
         bool translucent = false;
-        if (_textures.size() > 0) {
-            shader.setUniform("hasTexture", 1);
-            shader.setUniform("materialColor", vec4(0.0, 0.0, 0.0, 1.0));
-            
-            for (int i = 0; i < _textures.size(); i++) {
-                if (!_textures[i]->isOpaque()) {
-                    translucent = true;
-                    glDisable(GL_DEPTH_TEST);
-                    //Note: This isn't going to work properly because the surfaces are not sorted back to front. Transparent surfaces should be drawn after all the opaque geometry.
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                }
-                _textures[i]->bind(i);
-                shader.setUniform("textureSampler", i);
-            }
-        }
-        else {
+//        if (_textures.size() > 0) {
+//            shader.setUniform("hasTexture", 1);
+//            shader.setUniform("materialColor", vec4(0.0, 0.0, 0.0, 1.0));
+//            
+//            for (int i = 0; i < _textures.size(); i++) {
+//                if (!_textures[i]->isOpaque()) {
+//                    translucent = true;
+//                    glDisable(GL_DEPTH_TEST);
+//                    //Note: This isn't going to work properly because the surfaces are not sorted back to front. Transparent surfaces should be drawn after all the opaque geometry.
+//                    glEnable(GL_BLEND);
+//                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//                }
+//                _textures[i]->bind(i);
+//                shader.setUniform("textureSampler", i);
+//            }
+//        }
+//        else {
             shader.setUniform("hasTexture", 0);
             shader.setUniform("materialColor", _materialColor);
             if (_materialColor.a != 1.0) {
@@ -102,7 +110,7 @@ namespace basicgraphics {
                 //Note: This isn't going to work properly because the surfaces are not sorted back to front. Transparent surfaces should be drawn after all the opaque geometry.
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            }
+//            }
         }
         
         glBindVertexArray(this->getVAOID());
@@ -115,50 +123,50 @@ namespace basicgraphics {
             glEnable(GL_DEPTH_TEST);
         }
         
-        // Reset state
-        for (int i = 0; i < _textures.size(); i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
+//        // Reset state
+//        for (int i = 0; i < _textures.size(); i++)
+//        {
+//            glActiveTexture(GL_TEXTURE0 + i);
+//            glBindTexture(GL_TEXTURE_2D, 0);
+//        }
     }
     
-    void Mesh::setMaterialColor(const glm::vec4 &color)
+    void GrassMesh::setMaterialColor(const glm::vec4 &color)
     {
         _materialColor = color;
     }
     
-    int Mesh::getAllocatedVertexByteSize() const
+    int GrassMesh::getAllocatedVertexByteSize() const
     {
         return _allocatedVertexByteSize;
     }
     
-    int Mesh::getAllocatedIndexByteSize() const
+    int GrassMesh::getAllocatedIndexByteSize() const
     {
         return _allocatedIndexByteSize;
     }
     
-    int Mesh::getFilledVertexByteSize() const
+    int GrassMesh::getFilledVertexByteSize() const
     {
         return _filledVertexByteSize;
     }
     
-    int Mesh::getFilledIndexByteSize() const
+    int GrassMesh::getFilledIndexByteSize() const
     {
         return _filledIndexByteSize;
     }
     
-    int Mesh::getNumIndices() const
+    int GrassMesh::getNumIndices() const
     {
         return _numIndices;
     }
     
-    GLuint Mesh::getVAOID() const
+    GLuint GrassMesh::getVAOID() const
     {
         return _vaoID;
     }
     
-    void Mesh::updateVertexData(int startByteOffset, int vertexOffset, const std::vector<Vertex> &data)
+    void GrassMesh::updateVertexData(int startByteOffset, int vertexOffset, const std::vector<Vertex> &data)
     {
         assert(startByteOffset <= _filledVertexByteSize);
         
@@ -175,7 +183,7 @@ namespace basicgraphics {
         glBufferSubData(GL_ARRAY_BUFFER, startByteOffset, dataByteSize, &data[0]);
     }
     
-    void Mesh::updateIndexData(int totalNumIndices, int startByteOffset, int indexByteSize, int* index)
+    void GrassMesh::updateIndexData(int totalNumIndices, int startByteOffset, int indexByteSize, int* index)
     {
         assert(startByteOffset <= _filledIndexByteSize);
         _numIndices = totalNumIndices;
