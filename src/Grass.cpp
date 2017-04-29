@@ -144,7 +144,7 @@ namespace basicgraphics {
 			vec3 restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(edgePtHigher.wWithoutTwist - edgePtHigher.wWithTwist);
 
 			// Total
-			vec3 totalTwistForce = windForceTwist + restorationForceTwist
+			vec3 totalTwistForce = windForceTwist + restorationForceTwist;
 			////////// Finally... //////////
 			//do total force
 			//update vel
