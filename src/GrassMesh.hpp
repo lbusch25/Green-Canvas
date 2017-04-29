@@ -19,10 +19,9 @@
 
 namespace basicgraphics {
     
-    typedef std::shared_ptr<class Mesh> MeshRef;
+//    typedef std::shared_ptr<class GrassMesh> GrassMeshRef;
     
-    class Mesh : public std::enable_shared_from_this<Mesh>
-    {
+    class GrassMesh : std::enable_shared_from_this<GrassMesh> {
     public:
         //Note, I changed the structure of this vertex struct to include
         //our Grass' edgeVector and w vector
@@ -32,13 +31,12 @@ namespace basicgraphics {
             glm::vec3 edgeVector;
             glm::vec3 wVector;
             glm::vec3 normal;
-            glm::vec2 texCoord0;
         };
         
         
         // Creates a vao and vbo. Usage should be GL_STATIC_DRAW, GL_DYNAMIC_DRAW, etc. Leave data empty to just allocate but not upload.
-        Mesh(std::vector<std::shared_ptr<Texture>> textures, GLenum primitiveType, GLenum usage, int allocateVertexByteSize, int allocateIndexByteSize, int vertexOffset, const std::vector<Vertex> &data, int numIndices = 0, int indexByteSize = 0, int* index = nullptr);
-        virtual ~Mesh();
+        GrassMesh(GLenum primitiveType, GLenum usage, int allocateVertexByteSize, int allocateIndexByteSize, int vertexOffset, const std::vector<Vertex> &data, int numIndices = 0, int indexByteSize = 0, int* index = nullptr);
+        virtual ~GrassMesh();
         
         virtual void draw(GLSLProgram &shader);
         
@@ -72,7 +70,7 @@ namespace basicgraphics {
         
         glm::vec4 _materialColor;
         
-        std::vector<std::shared_ptr<Texture>> _textures;
+//        std::vector<std::shared_ptr<Texture>> _textures;
     };
     
 }

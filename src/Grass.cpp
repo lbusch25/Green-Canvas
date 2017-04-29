@@ -12,6 +12,7 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include "Mesh.h"
+#include "GrassMesh.hpp"
 
 namespace basicgraphics {
     using namespace glm;
@@ -22,7 +23,7 @@ namespace basicgraphics {
     //a four point line strip from the input point.
     Grass::Grass(vec3 position, vec3 windDirection) {
         
-        std::vector<Mesh::Vertex> cpuVertexArray;
+        std::vector<GrassMesh::Vertex> cpuVertexArray;
         std::vector<int> cpuIndexArray;
 
         //This calculates the position of all four points in our grass mesh
@@ -39,8 +40,8 @@ namespace basicgraphics {
         pointPositions.push_back(position3);
         
         for (int i = 0; i < pointPositions.size() - 1; i++) {
-            Mesh::Vertex currentVert; //The vertex we are working on
-            Mesh::Vertex nextVert; //The next vertex up
+            GrassMesh::Vertex currentVert; //The vertex we are working on
+            GrassMesh::Vertex nextVert; //The next vertex up
             
             currentVert.position = pointPositions[i];
             nextVert.position = pointPositions[i + 1];
@@ -60,8 +61,8 @@ namespace basicgraphics {
             cpuIndexArray.push_back(i);
         }
         
-        Mesh::Vertex lastVert; //The end vertex of our grass blade
-        Mesh::Vertex previousVert = cpuVertexArray[cpuVertexArray.size() - 1];
+        GrassMesh::Vertex lastVert; //The end vertex of our grass blade
+        GrassMesh::Vertex previousVert = cpuVertexArray[cpuVertexArray.size() - 1];
         
         lastVert.position = pointPositions[pointPositions.size() - 1];
         lastVert.edgeVector = vec3(0, 0, 0);
@@ -73,9 +74,11 @@ namespace basicgraphics {
         const int cpuVertexByteSize = sizeof(Mesh::Vertex) * cpuVertexArray.size();
         const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
         
-        _mesh.reset(new Mesh(std::vector<std::shared_ptr<Texture>>(), GL_LINE_STRIP, GL_STATIC_DRAW,
-                             cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray,
-                             cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+//        _mesh.reset(new Mesh(std::vector<std::shared_ptr<Texture>>(), GL_LINE_STRIP, GL_STATIC_DRAW,
+//                             cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray,
+//                             cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+        _mesh.reset(new GrassMesh(GL_LINE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+        
     }
     
     Grass::~Grass() {};
