@@ -18,18 +18,9 @@
 
 
 namespace basicgraphics {
-    //Holds the data necessary to compute physics calculations on grass control points
-	struct GrassControlPoint {
-		vec3 pos;
-		vec3 vel;
-		//vec3 normal;
-		vec3 wWithoutTwist;
-		vec3 wWithTwist;
-		float stiffness;
-	};
     class Grass {
     public:
-        Grass(glm::vec3 position, glm::vec3 windDirection);
+        Grass(glm::vec3 position);
         ~Grass();
         
         void draw(GLSLProgram &shader);
@@ -41,10 +32,10 @@ namespace basicgraphics {
         std::shared_ptr<glm::vec4> _color;
 
         //The control points to be used and updated when a wind force is applied
-		GrassControlPoint controlPoints[4];
+		GrassMesh::Vertex controlPoints[4];
         
         //The default status of the grass, use when no wind force applied
-		GrassControlPoint staticStateControlPoints[4];
+		GrassMesh::Vertex staticStateControlPoints[4];
 
         const float _bladeLength = 1;
     };

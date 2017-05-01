@@ -21,7 +21,7 @@ namespace basicgraphics {
     //Takes in the position of the bottom point of the grass stalk and the direction of the wind
     //vector that will be acting upon the grass. The grass is then built up directly vertical as
     //a four point line strip from the input point.
-    Grass::Grass(vec3 position, vec3 windDirection) {
+    Grass::Grass(vec3 position) {
         
         std::vector<GrassMesh::Vertex> cpuVertexArray;
         std::vector<int> cpuIndexArray;
@@ -41,37 +41,30 @@ namespace basicgraphics {
         
         for (int i = 0; i < pointPositions.size() - 1; i++) {
             GrassMesh::Vertex currentVert; //The vertex we are working on
-            GrassMesh::Vertex nextVert; //The next vertex up
             
             currentVert.position = pointPositions[i];
-            nextVert.position = pointPositions[i + 1];
-            
-            //Calculates the vector from the current vertex to the next vertex up
-            //Has to be normalized for the projection calculation below
-            currentVert.edgeVector = normalize(nextVert.position - currentVert.position);
-            
-            //Calculates a normalized wind value by finding the amount of the wind that is in a
-            //direction orthogonal to our edgeDirection (ie grass blade)
-            currentVert.wVector = normalize(windDirection - dot(windDirection, currentVert.edgeVector)*windDirection);
-            
-            //Calculates the normal for our grass blade
-            currentVert.normal = cross(currentVert.wVector, currentVert.edgeVector);
+            currentVert.wWithoutTwist = vec3(0, 0, 1);
+			currentVert.wWithTwist = currentVert.wWithoutTwist;
+			currentVert.velocity = vec3(0);
+			currentVert.stiffness = 0.5;
             
             cpuVertexArray.push_back(currentVert);
             cpuIndexArray.push_back(i);
         }
         
         GrassMesh::Vertex lastVert; //The end vertex of our grass blade
-        GrassMesh::Vertex previousVert = cpuVertexArray[cpuVertexArray.size() - 1];
         
         lastVert.position = pointPositions[pointPositions.size() - 1];
-        lastVert.edgeVector = vec3(0, 0, 0);
-        lastVert.wVector = normalize(windDirection -
-                                     dot(windDirection, previousVert.edgeVector)*windDirection);
+
+		lastVert.wWithoutTwist = vec3(0, 0, 1);
+		lastVert.wWithTwist = lastVert.wWithoutTwist;
+		lastVert.velocity = vec3(0);
+		lastVert.stiffness = 0.5;
+
         cpuVertexArray.push_back(lastVert);
         cpuIndexArray.push_back(cpuIndexArray.size());
         
-        const int cpuVertexByteSize = sizeof(Mesh::Vertex) * cpuVertexArray.size();
+        const int cpuVertexByteSize = sizeof(GrassMesh::Vertex) * cpuVertexArray.size();
         const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
         
 //        _mesh.reset(new Mesh(std::vector<std::shared_ptr<Texture>>(), GL_LINE_STRIP, GL_STATIC_DRAW,
@@ -79,6 +72,8 @@ namespace basicgraphics {
 //                             cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
         _mesh.reset(new GrassMesh(GL_LINE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
         
+		std::copy(cpuVertexArray.begin(), cpuVertexArray.end(), controlPoints);
+		std::copy(cpuVertexArray.begin(), cpuVertexArray.end(), staticStateControlPoints);
     }
     
     Grass::~Grass() {};
@@ -86,25 +81,25 @@ namespace basicgraphics {
 	void Grass::doPhysicsStuff(vec3 velocityAtTip) {
 		float areaOfThrustSurfaceOfWind = 1;
 		float dragCoefficient = 1;
-		GrassControlPoint tip = controlPoints[3];
+		GrassMesh::Vertex tip = controlPoints[3];
 
-		vec3 staticGrowthVector = staticStateControlPoints[3].pos - staticStateControlPoints[0].vel;
-		vec3 growthVec = controlPoints[3].pos - controlPoints[0].pos;
+		vec3 staticGrowthVector = staticStateControlPoints[3].position - staticStateControlPoints[0].position;
+		vec3 growthVec = controlPoints[3].position - controlPoints[0].position;
 		growthVec.y = 0; //project
 		float growthVecAngularDisp = acos(dot(normalize(growthVec), normalize(staticGrowthVector)));
 
 		//Bending angular displacement
-		float staticBendAngularDisp = asin(normalize(staticStateControlPoints[3].pos - staticStateControlPoints[2].pos).y);
-		float currentBendAngularDisp = asin(normalize(controlPoints[3].pos - controlPoints[2].pos).y);
+		float staticBendAngularDisp = asin(normalize(staticStateControlPoints[3].position - staticStateControlPoints[2].position).y);
+		float currentBendAngularDisp = asin(normalize(controlPoints[3].position - controlPoints[2].position).y);
 
 		float currentBendAngularTwist = acos(dot(normalize(staticStateControlPoints[3].wWithTwist), normalize(controlPoints[3].wWithTwist)));
 		
 		//Start at 1 because the root point can't swing
 		for (int edge = 0; edge < 3; edge++) {
-			GrassControlPoint edgePtLower = controlPoints[edge];
-			GrassControlPoint edgePtHigher = controlPoints[edge + 1];
-			GrassControlPoint edgePtLowerStatic = staticStateControlPoints[edge];
-			GrassControlPoint edgePtHigherStatic = staticStateControlPoints[edge + 1];
+			GrassMesh::Vertex edgePtLower = controlPoints[edge];
+			GrassMesh::Vertex edgePtHigher = controlPoints[edge + 1];
+			GrassMesh::Vertex edgePtLowerStatic = staticStateControlPoints[edge];
+			GrassMesh::Vertex edgePtHigherStatic = staticStateControlPoints[edge + 1];
 
 			////////// Swinging //////////
 			// Wind force
@@ -119,8 +114,8 @@ namespace basicgraphics {
 			vec3 totalSwingForce = windForceSwinging + restorationForceSwing;
 
 			////////// Bending //////////
-			vec3 staticEdgeVec = edgePtLowerStatic.pos - edgePtHigherStatic.pos;
-			vec3 edgeVec = edgePtLower.pos - edgePtHigher.pos;
+			vec3 staticEdgeVec = edgePtLowerStatic.position - edgePtHigherStatic.position;
+			vec3 edgeVec = edgePtLower.position - edgePtHigher.position;
 			vec3 edgeNormalWithoutTwist = cross(edgePtLower.wWithoutTwist, edgeVec);
 			bool windIsTowardsNormal = dot(velocityAtTip, edgeNormalWithoutTwist) > 0;
 

@@ -32,7 +32,7 @@ void main () {
     
     vec3 final_color = vec3(0.0, 0.0, 0.0);
     vec2 diffuseTex = vec2(max(0, dotNL), 0.0);
-    vec2 specularTex = vec2(pow(max(0,dotHN), specularExp), 0.0);
+    //vec2 specularTex = vec2(pow(max(0,dotHN), specularExp), 0.0);
     
     vec3 ambientColor = ambientReflection * ambientIntensity;
     vec3 diffuseColor = diffuseReflection * diffuseIntensity * texture(diffuseRamp, diffuseTex).xyz;

@@ -27,10 +27,11 @@ namespace basicgraphics {
         //our Grass' edgeVector and w vector
         //Lawson
         struct Vertex {
-            glm::vec3 position;
-            glm::vec3 edgeVector;
-            glm::vec3 wVector;
-            glm::vec3 normal;
+			vec3 position;
+			vec3 velocity;
+			vec3 wWithoutTwist;
+			vec3 wWithTwist;
+			float stiffness;
         };
         
         

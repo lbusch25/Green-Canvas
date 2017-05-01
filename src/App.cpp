@@ -11,7 +11,7 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 
 	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
-    grass.reset(new Grass(vec3(0), vec3(0)));
+    grass.reset(new Grass(vec3(0)));
 	windSim.reset(new FluidSimulator(10, 10, 10));
 	windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
 
@@ -32,7 +32,7 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 			grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);       
 			grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
         
-			Grass *grassBlade = new Grass(grassPos, vec3(0,0,0));
+			Grass *grassBlade = new Grass(grassPos); 
 			grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
 		}
     }
@@ -42,7 +42,7 @@ void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
 		if (mouseDown) {
-			Grass *userBlade = new Grass(pt, vec3(0, 0, 0));
+			Grass *userBlade = new Grass(pt);
 			userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
 		}
     }
@@ -93,7 +93,7 @@ void App::onRenderGraphics() {
 //    specularRamp->bind(1);
 //    _shader.setUniform("specularRamp", 1);
     
-    _shader.setUniform("normal_mat", mat3(transpose(inverse(model)))); //Gives the normal in world coords
+    //_shader.setUniform("normal_mat", mat3(transpose(inverse(model)))); //Gives the normal in world coords
 
     //Properties of our grass surface, we can adjust these for a more realistic grass later
     vec3 ambientReflectionCoeff = vec3(1,1,1);
