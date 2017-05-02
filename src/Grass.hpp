@@ -15,6 +15,8 @@
 #include <glfw/glfw3.h>
 #include "GrassMesh.hpp"
 
+#include <glm/glm/gtc/matrix_transform.hpp>
+
 
 namespace basicgraphics {
     class Grass {
@@ -23,7 +25,7 @@ namespace basicgraphics {
         ~Grass();
         
         void draw(GLSLProgram &shader);
-		void doPhysicsStuff(vec3 velocityAtTip);
+		void doPhysicsStuff(vec3 velocityAtTip, float dt);
         
         std::shared_ptr<GrassMesh> getMesh();
         
@@ -42,7 +44,14 @@ namespace basicgraphics {
         //The default status of the grass, use when no wind force applied
 		GrassMesh::Vertex staticStateControlPoints[4];
 
-        const float _bladeLength = 1;
+		const float massOfABladeOfGrass = 0.01;
+
+		void calcSwinging(vec3 windVelocity, float angularAcc[3]);
+		void calcBending(vec3 windVelocity, float acceleration[3]);
+		void calcBendingCustomTip(vec3 windVelocity, int tipEdge, int nextTipEdge, float acceleration[3]);
+		void calcTwisting(vec3 windVelocity, float angularAcc[3]);
+		
+		float angularAccFromTorque(vec3 radiusVec, vec3 force);
     };
 }
 

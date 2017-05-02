@@ -28,10 +28,13 @@ namespace basicgraphics {
         //Lawson
         struct Vertex {
 			vec3 position;
-			vec3 velocity;
 			vec3 wWithoutTwist;
 			vec3 wWithTwist;
 			float stiffness;
+
+			float swingVel;
+			float bendVel;
+			float twistVel;
         };
         
         

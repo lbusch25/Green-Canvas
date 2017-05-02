@@ -41,7 +41,9 @@ namespace basicgraphics {
             currentVert.position = pointPositions[i];
             currentVert.wWithoutTwist = vec3(0, 0, 1);
 			currentVert.wWithTwist = currentVert.wWithoutTwist;
-			currentVert.velocity = vec3(0);
+			currentVert.swingVel = 0;
+			currentVert.bendVel = 0;
+			currentVert.twistVel = 0;
 			currentVert.stiffness = 0.5;
             
             cpuVertexArray.push_back(currentVert);
@@ -54,7 +56,9 @@ namespace basicgraphics {
 
 		lastVert.wWithoutTwist = vec3(0, 0, 1);
 		lastVert.wWithTwist = lastVert.wWithoutTwist;
-		lastVert.velocity = vec3(0);
+		lastVert.swingVel = 0;
+		lastVert.bendVel = 0;
+		lastVert.twistVel = 0;
 		lastVert.stiffness = 0.5;
 
         cpuVertexArray.push_back(lastVert);
@@ -73,77 +77,181 @@ namespace basicgraphics {
     
     Grass::~Grass() {};
 
-	void Grass::doPhysicsStuff(vec3 velocityAtTip) {
-		float areaOfThrustSurfaceOfWind = 1;
+	void Grass::doPhysicsStuff(vec3 velocityAtTip, float dt) {
+
+		float swingAngularAcc[3];
+		calcSwinging(velocityAtTip, swingAngularAcc);
+		float bendAngularAcc[3];
+		calcBending(velocityAtTip, bendAngularAcc);
+		float twistAngularAcc[3];
+		calcTwisting(velocityAtTip, twistAngularAcc);
+
+
+		vec3 base = controlPoints[0].position;
+		//Don't need to modify the base
+		for (int i = 3; i <= 1; i++) {
+			controlPoints[i].swingVel += swingAngularAcc[i - 1] * dt;
+			controlPoints[i].bendVel  += bendAngularAcc[i - 1] * dt;
+			controlPoints[i].twistVel += twistAngularAcc[i - 1] * dt;
+
+			//Swing
+			mat4 swingTransform = glm::translate(mat4(1.0), base) *
+							   	  glm::rotate(mat4(1.0), controlPoints[i].swingVel * dt, vec3(0, 1, 0)) *
+								  glm::translate(mat4(1.0), -base);
+
+			controlPoints[i].position = vec3(swingTransform * vec4(controlPoints[i].position, 1.0));
+			controlPoints[i].wWithoutTwist = vec3(swingTransform * vec4(controlPoints[i].wWithoutTwist, 0.0));
+			controlPoints[i].wWithTwist = vec3(swingTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+
+			//Bend
+			vec3 lowerPt = controlPoints[i - 1].position;
+			mat4 bendTransform = glm::translate(mat4(1.0), lowerPt) *
+								 glm::rotate(mat4(1.0), controlPoints[i].bendVel * dt, controlPoints[i].wWithoutTwist) *
+								 glm::translate(mat4(1.0), -lowerPt);
+
+			controlPoints[i].position = vec3(bendTransform * vec4(controlPoints[i].position, 1.0));
+			controlPoints[i].wWithTwist = vec3(bendTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+
+			//Twist
+			vec3 edgeVec = controlPoints[i].position - lowerPt;
+			mat4 twistTransform = glm::rotate(mat4(1.0), controlPoints[i].twistVel * dt, edgeVec);
+			controlPoints[i].wWithTwist = vec3(twistTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+
+			//Should still be normal but better safe than sorry
+			controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
+			controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
+		}
+	}
+
+	void Grass::calcSwinging(vec3 windVelocity, float angularAcc[3]) {
+		float areaOfThrustSurfaceOfWind = 0.1;
 		float dragCoefficient = 1;
+
 		GrassMesh::Vertex tip = controlPoints[3];
 
-		vec3 staticGrowthVector = staticStateControlPoints[3].position - staticStateControlPoints[0].position;
-		vec3 growthVec = controlPoints[3].position - controlPoints[0].position;
+		vec3 staticGrowthVec = staticStateControlPoints[0].position - staticStateControlPoints[3].position;
+		vec3 growthVec = tip.position - controlPoints[3].position;
+		staticGrowthVec.y = 0; //project
 		growthVec.y = 0; //project
-		float growthVecAngularDisp = acos(dot(normalize(growthVec), normalize(staticGrowthVector)));
-
-		//Bending angular displacement
-		float staticBendAngularDisp = asin(normalize(staticStateControlPoints[3].position - staticStateControlPoints[2].position).y);
-		float currentBendAngularDisp = asin(normalize(controlPoints[3].position - controlPoints[2].position).y);
-
-		float currentBendAngularTwist = acos(dot(normalize(staticStateControlPoints[3].wWithTwist), normalize(controlPoints[3].wWithTwist)));
+		float growthVecAngularDisp = acos(dot(normalize(growthVec), normalize(staticGrowthVec)));
 		
-		//Start at 1 because the root point can't swing
 		for (int edge = 0; edge < 3; edge++) {
-			GrassMesh::Vertex edgePtLower = controlPoints[edge];
-			GrassMesh::Vertex edgePtHigher = controlPoints[edge + 1];
-			GrassMesh::Vertex edgePtLowerStatic = staticStateControlPoints[edge];
-			GrassMesh::Vertex edgePtHigherStatic = staticStateControlPoints[edge + 1];
+			GrassMesh::Vertex lowVert = controlPoints[edge];
+			GrassMesh::Vertex hiVert = controlPoints[edge + 1];
 
-			////////// Swinging //////////
 			// Wind force
-			vec3 projectedSwingVel = dot(velocityAtTip, edgePtHigher.wWithoutTwist) * edgePtHigher.wWithoutTwist;
+			vec3 projectedSwingVel = dot(windVelocity, hiVert.wWithoutTwist) * hiVert.wWithoutTwist;
 			vec3 windForceSwinging = areaOfThrustSurfaceOfWind * dragCoefficient * projectedSwingVel;
 
 			// Restoration force
-			float growthVecAnglularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * growthVecAngularDisp;
-			vec3 restorationForceSwing = tip.stiffness * growthVecAnglularDispAdj * normalize(staticGrowthVector - growthVec);
+			float growthVecAnglularDispAdj = (tip.stiffness / hiVert.stiffness) * growthVecAngularDisp;
+			vec3 restorationForceSwing = tip.stiffness * growthVecAnglularDispAdj * normalize(staticGrowthVec - growthVec);
 
 			// Total
 			vec3 totalSwingForce = windForceSwinging + restorationForceSwing;
 
-			////////// Bending //////////
-			vec3 staticEdgeVec = edgePtLowerStatic.position - edgePtHigherStatic.position;
-			vec3 edgeVec = edgePtLower.position - edgePtHigher.position;
-			vec3 edgeNormalWithoutTwist = cross(edgePtLower.wWithoutTwist, edgeVec);
-			bool windIsTowardsNormal = dot(velocityAtTip, edgeNormalWithoutTwist) > 0;
+			vec3 edgeVec = hiVert.position - lowVert.position;
+			angularAcc[edge] = angularAccFromTorque(edgeVec, totalSwingForce);
+		}
+	}
+
+	void Grass::calcBending(vec3 windVelocity, float angularAcc[3]) {
+		
+		//Figure out where the second tip is
+		int secondTipEdge = -1;
+		bool prevENTW;
+		for (int edge = 2; edge >= 0; edge++) {
+			GrassMesh::Vertex lowVert = controlPoints[edge];
+			GrassMesh::Vertex hiVert = controlPoints[edge + 1];
+
+			vec3 edgeVec = normalize(lowVert.position - hiVert.position);
+			vec3 edgeNormalWithoutTwist = cross(hiVert.wWithoutTwist, edgeVec);
+			bool edgeNormalTowardsWind = dot(windVelocity, edgeNormalWithoutTwist) > 0;
+			if (edge == 2) {
+				prevENTW = edgeNormalTowardsWind;
+			}
+			else if (edgeNormalTowardsWind != prevENTW) {
+				secondTipEdge = edge;
+				break;
+			}
+		}
+		if (secondTipEdge == -1) {
+			calcBendingCustomTip(windVelocity, 2, 0, angularAcc);
+		}
+		else {
+			calcBendingCustomTip(windVelocity, 2, secondTipEdge+1, angularAcc);
+			calcBendingCustomTip(windVelocity, secondTipEdge, 0, angularAcc);
+		}
+	}
+
+	void Grass::calcBendingCustomTip(vec3 windVelocity, int tipEdge, int lastEdge, float angularAcc[3]) {
+		float areaOfThrustSurfaceOfWind = 0.1;
+		float dragCoefficient = 1;
+		
+		GrassMesh::Vertex localTip = controlPoints[tipEdge + 1];
+
+		float staticBendAngle = asin(normalize(staticStateControlPoints[tipEdge + 1].position - staticStateControlPoints[tipEdge].position).y);
+		float currentBendAngle = asin(normalize(controlPoints[tipEdge + 1].position - controlPoints[tipEdge].position).y);
+		float tipBendAngularDisp = currentBendAngle - staticBendAngle;
+		
+		for (int edge = tipEdge; edge >= lastEdge; edge--) {
+			GrassMesh::Vertex lowVert = controlPoints[edge];
+			GrassMesh::Vertex hiVert = controlPoints[edge + 1];
+			GrassMesh::Vertex staticLowVert = staticStateControlPoints[edge];
+			GrassMesh::Vertex staticHiVert = staticStateControlPoints[edge + 1];
+
+			vec3 staticEdgeVec = staticLowVert.position - staticHiVert.position;
+			vec3 edgeVec = lowVert.position - hiVert.position;
+			vec3 edgeNormalWithoutTwist = normalize(cross(lowVert.wWithoutTwist, edgeVec));
 
 			// Wind force
-			vec3 projectedBendVel = dot(velocityAtTip, edgeNormalWithoutTwist) * edgeNormalWithoutTwist;
+			vec3 projectedBendVel = dot(windVelocity, edgeNormalWithoutTwist) * edgeNormalWithoutTwist;
 			vec3 windForceBending = areaOfThrustSurfaceOfWind * dragCoefficient * projectedBendVel;
 
 			// Restoration force
-			float currentBendAngularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * currentBendAngularDisp;		
-			vec3 restorationForceBending = tip.stiffness * growthVecAnglularDispAdj * normalize(staticEdgeVec - edgeVec);
+			float currentBendAngularDispAdj = (localTip.stiffness / hiVert.stiffness) * tipBendAngularDisp;
+			vec3 restorationForceBending = localTip.stiffness * currentBendAngularDispAdj * normalize(staticEdgeVec - edgeVec);
 
 			// Total
-			vec3 totalBendForce = windForceBending + restorationForceBending;
+			vec3 totalBendForce = windForceBending + restorationForceBending; 
 
-			////////// Twisting //////////
-			vec3 edgeNormalWithTwist = cross(edgePtLower.wWithTwist, edgeVec);
+			angularAcc[edge] = angularAccFromTorque(localTip.wWithoutTwist, totalBendForce);
+		}
+	}
+	void Grass::calcTwisting(vec3 windVelocity, float angularAcc[3]) {
+		float areaOfThrustSurfaceOfWind = 0.1;
+		float dragCoefficient = 1;
+
+		GrassMesh::Vertex tip = controlPoints[3];
+
+		float topEdgeTwistDisp = acos(dot(staticStateControlPoints[3].wWithTwist, tip.wWithTwist));
+		
+		for (int edge = 0; edge < 3; edge++) {
+			GrassMesh::Vertex lowVert = controlPoints[edge];
+			GrassMesh::Vertex hiVert = controlPoints[edge + 1];
+			vec3 edgeVec = lowVert.position - hiVert.position;
+
+			vec3 edgeNormalWithTwist = normalize(cross(lowVert.wWithTwist, edgeVec));
 
 			// Wind force
-			vec3 projectedTwistVel = dot(velocityAtTip, edgeNormalWithTwist) * edgeNormalWithTwist;
+			vec3 projectedTwistVel = dot(windVelocity, edgeNormalWithTwist) * edgeNormalWithTwist;
 			vec3 windForceTwist = areaOfThrustSurfaceOfWind * dragCoefficient * projectedTwistVel;
-			
+
 			// Restoration force
-			float currentTwistAngularDispAdj = (tip.stiffness / edgePtHigher.stiffness) * currentBendAngularTwist;
-			vec3 restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(edgePtHigher.wWithoutTwist - edgePtHigher.wWithTwist);
+			float currentTwistAngularDispAdj = (tip.stiffness / hiVert.stiffness) * topEdgeTwistDisp;
+			vec3 restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(hiVert.wWithoutTwist - hiVert.wWithTwist);
 
 			// Total
-            vec3 totalTwistForce = windForceTwist + restorationForceTwist;
-			////////// Finally... //////////
-			//do total force
-			//update vel
-			//update pos
-			//update normal, w
+			vec3 totalTwistForce = windForceTwist + restorationForceTwist;
+
+			angularAcc[edge] = angularAccFromTorque(hiVert.wWithTwist, totalTwistForce);
 		}
+	}
+
+	float Grass::angularAccFromTorque(vec3 radiusVec, vec3 force) {
+		float torque = length(cross(radiusVec, force));
+		float momentOfInertia = pow(length(radiusVec), 2) * massOfABladeOfGrass;
+		return torque / momentOfInertia;
 	}
     
     void Grass::draw(GLSLProgram &shader) {
