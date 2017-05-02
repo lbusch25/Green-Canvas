@@ -166,11 +166,11 @@ namespace basicgraphics {
         return _vaoID;
     }
     
-    void GrassMesh::updateVertexData(int startByteOffset, int vertexOffset, const std::vector<GrassMesh::Vertex> &data)
+    void GrassMesh::updateVertexData(int startByteOffset, int vertexOffset, const GrassMesh::Vertex (&data)[4])
     {
         assert(startByteOffset <= _filledVertexByteSize);
         
-        int dataByteSize = sizeof(GrassMesh::Vertex)*(data.size() - vertexOffset);
+        int dataByteSize = sizeof(GrassMesh::Vertex)*(4 - vertexOffset);
         
         int totalBytes = startByteOffset + dataByteSize;
         if (_filledVertexByteSize < totalBytes) {

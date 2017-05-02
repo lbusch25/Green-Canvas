@@ -46,10 +46,10 @@ namespace basicgraphics {
 
 		const float massOfABladeOfGrass = 0.01;
 
-		void calcSwinging(vec3 windVelocity, float angularAcc[3]);
-		void calcBending(vec3 windVelocity, float acceleration[3]);
-		void calcBendingCustomTip(vec3 windVelocity, int tipEdge, int nextTipEdge, float acceleration[3]);
-		void calcTwisting(vec3 windVelocity, float angularAcc[3]);
+		void calcSwinging(vec3 windVelocity, float(&angularAcc)[3]);
+		void calcBending(vec3 windVelocity, float(&acceleration)[3]);
+		void calcBendingCustomTip(vec3 windVelocity, int tipEdge, int nextTipEdge, float(&acceleration)[3]);
+		void calcTwisting(vec3 windVelocity, float(&angularAcc)[3]);
 		
 		float angularAccFromTorque(vec3 radiusVec, vec3 force);
     };

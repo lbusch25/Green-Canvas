@@ -57,7 +57,7 @@ namespace basicgraphics {
         GLuint getVAOID() const;
         
         // Update the vbos. startByteOffset+dataByteSize must be <= allocatedByteSize
-        void updateVertexData(int startByteOffset, int vertexOffset, const std::vector<GrassMesh::Vertex> &data);
+        void updateVertexData(int startByteOffset, int vertexOffset, const GrassMesh::Vertex(&data)[4]);
         void updateIndexData(int totalNumIndices, int startByteOffset, int indexByteSize, int* index);
         
     private:

@@ -86,7 +86,6 @@ namespace basicgraphics {
 		float twistAngularAcc[3];
 		calcTwisting(velocityAtTip, twistAngularAcc);
 
-
 		vec3 base = controlPoints[0].position;
 		//Don't need to modify the base
 		for (int i = 3; i <= 1; i++) {
@@ -121,16 +120,18 @@ namespace basicgraphics {
 			controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
 			controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
 		}
+		//A bit hacky but works for now;
+		_mesh->updateVertexData(0, 0, controlPoints);
 	}
 
-	void Grass::calcSwinging(vec3 windVelocity, float angularAcc[3]) {
+	void Grass::calcSwinging(vec3 windVelocity, float (&angularAcc)[3]) {
 		float areaOfThrustSurfaceOfWind = 0.1;
 		float dragCoefficient = 1;
 
 		GrassMesh::Vertex tip = controlPoints[3];
 
-		vec3 staticGrowthVec = staticStateControlPoints[0].position - staticStateControlPoints[3].position;
-		vec3 growthVec = tip.position - controlPoints[3].position;
+		vec3 staticGrowthVec = staticStateControlPoints[3].position - staticStateControlPoints[0].position;
+		vec3 growthVec = tip.position - controlPoints[0].position;
 		staticGrowthVec.y = 0; //project
 		growthVec.y = 0; //project
 		float growthVecAngularDisp = acos(dot(normalize(growthVec), normalize(staticGrowthVec)));
@@ -144,8 +145,14 @@ namespace basicgraphics {
 			vec3 windForceSwinging = areaOfThrustSurfaceOfWind * dragCoefficient * projectedSwingVel;
 
 			// Restoration force
-			float growthVecAnglularDispAdj = (tip.stiffness / hiVert.stiffness) * growthVecAngularDisp;
-			vec3 restorationForceSwing = tip.stiffness * growthVecAnglularDispAdj * normalize(staticGrowthVec - growthVec);
+			vec3 restorationForceSwing;
+			if (growthVecAngularDisp == 0) {
+				restorationForceSwing = vec3(0);
+			}
+			else {
+				float growthVecAnglularDispAdj = (tip.stiffness / hiVert.stiffness) * growthVecAngularDisp;
+				restorationForceSwing = tip.stiffness * growthVecAnglularDispAdj * normalize(staticGrowthVec - growthVec);
+			}
 
 			// Total
 			vec3 totalSwingForce = windForceSwinging + restorationForceSwing;
@@ -155,12 +162,12 @@ namespace basicgraphics {
 		}
 	}
 
-	void Grass::calcBending(vec3 windVelocity, float angularAcc[3]) {
+	void Grass::calcBending(vec3 windVelocity, float (&angularAcc)[3]) {
 		
 		//Figure out where the second tip is
 		int secondTipEdge = -1;
 		bool prevENTW;
-		for (int edge = 2; edge >= 0; edge++) {
+		for (int edge = 2; edge >= 0; edge--) {
 			GrassMesh::Vertex lowVert = controlPoints[edge];
 			GrassMesh::Vertex hiVert = controlPoints[edge + 1];
 
@@ -184,7 +191,7 @@ namespace basicgraphics {
 		}
 	}
 
-	void Grass::calcBendingCustomTip(vec3 windVelocity, int tipEdge, int lastEdge, float angularAcc[3]) {
+	void Grass::calcBendingCustomTip(vec3 windVelocity, int tipEdge, int lastEdge, float(&angularAcc)[3]) {
 		float areaOfThrustSurfaceOfWind = 0.1;
 		float dragCoefficient = 1;
 		
@@ -209,8 +216,14 @@ namespace basicgraphics {
 			vec3 windForceBending = areaOfThrustSurfaceOfWind * dragCoefficient * projectedBendVel;
 
 			// Restoration force
-			float currentBendAngularDispAdj = (localTip.stiffness / hiVert.stiffness) * tipBendAngularDisp;
-			vec3 restorationForceBending = localTip.stiffness * currentBendAngularDispAdj * normalize(staticEdgeVec - edgeVec);
+			vec3 restorationForceBending;
+			if (tipBendAngularDisp == 0) {
+				restorationForceBending = vec3(0);
+			}
+			else {
+				float currentBendAngularDispAdj = (localTip.stiffness / hiVert.stiffness) * tipBendAngularDisp;
+				restorationForceBending = localTip.stiffness * currentBendAngularDispAdj * normalize(staticEdgeVec - edgeVec);
+			}
 
 			// Total
 			vec3 totalBendForce = windForceBending + restorationForceBending; 
@@ -218,7 +231,7 @@ namespace basicgraphics {
 			angularAcc[edge] = angularAccFromTorque(localTip.wWithoutTwist, totalBendForce);
 		}
 	}
-	void Grass::calcTwisting(vec3 windVelocity, float angularAcc[3]) {
+	void Grass::calcTwisting(vec3 windVelocity, float (&angularAcc)[3]) {
 		float areaOfThrustSurfaceOfWind = 0.1;
 		float dragCoefficient = 1;
 
@@ -238,8 +251,14 @@ namespace basicgraphics {
 			vec3 windForceTwist = areaOfThrustSurfaceOfWind * dragCoefficient * projectedTwistVel;
 
 			// Restoration force
-			float currentTwistAngularDispAdj = (tip.stiffness / hiVert.stiffness) * topEdgeTwistDisp;
-			vec3 restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(hiVert.wWithoutTwist - hiVert.wWithTwist);
+			vec3 restorationForceTwist;
+			if (topEdgeTwistDisp == 0) {
+				restorationForceTwist = vec3(0);
+			}
+			else {
+				float currentTwistAngularDispAdj = (tip.stiffness / hiVert.stiffness) * topEdgeTwistDisp;
+				restorationForceTwist = tip.stiffness * currentTwistAngularDispAdj * normalize(hiVert.wWithoutTwist - hiVert.wWithTwist);
+			}
 
 			// Total
 			vec3 totalTwistForce = windForceTwist + restorationForceTwist;
@@ -260,13 +279,5 @@ namespace basicgraphics {
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
 		glDrawElements(GL_PATCHES, _mesh->getNumIndices(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
-    }
-    
-    std::shared_ptr<GrassMesh> Grass::getMesh() {
-        return _mesh;
-    }
-    
-    std::vector<GrassMesh::Vertex> Grass::getVertArray() {
-        return cpuVertexArray;
     }
 }

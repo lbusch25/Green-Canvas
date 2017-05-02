@@ -143,8 +143,7 @@ void App::onRenderGraphics() {
     }
     
     for(int i = 0; i < userGrass.size(); i++) {
-//        userGrass[i]->doPhysicsStuff(velocityAtTip);
-//        userGrass[i]->getMesh()->updateVertexData(0, 0, userGrass[i]->getVertArray());
+        userGrass[i]->doPhysicsStuff(vec3(100.0, 0.0, 100.0), dt);
         userGrass[i]->draw(_shader);
     }
 }
