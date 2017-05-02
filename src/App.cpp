@@ -143,7 +143,7 @@ void App::onRenderGraphics() {
     }
     
     for(int i = 0; i < userGrass.size(); i++) {
-        userGrass[i]->doPhysicsStuff(vec3(100.0, 0.0, 100.0), dt);
+        userGrass[i]->doPhysicsStuff(vec3(1, 0, 1), dt);
         userGrass[i]->draw(_shader);
     }
 }

@@ -88,7 +88,7 @@ namespace basicgraphics {
 
 		vec3 base = controlPoints[0].position;
 		//Don't need to modify the base
-		for (int i = 3; i <= 1; i++) {
+		for (int i = 3; i >= 1; i--) {
 			controlPoints[i].swingVel += swingAngularAcc[i - 1] * dt;
 			controlPoints[i].bendVel  += bendAngularAcc[i - 1] * dt;
 			controlPoints[i].twistVel += twistAngularAcc[i - 1] * dt;
