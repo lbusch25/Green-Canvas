@@ -137,10 +137,14 @@ void App::onRenderGraphics() {
     
     //Draws our grass square 
     for(int i = 0; i < grassBlades.size(); i++) {
+//        grassBlades[i]->doPhysicsStuff(velocityAtTip);
+//        grassBlades[i]->getMesh()->updateVertexData(0, 0, grassBlades[i]->getVertArray());
         grassBlades[i]->draw(_shader);
     }
     
     for(int i = 0; i < userGrass.size(); i++) {
+//        userGrass[i]->doPhysicsStuff(velocityAtTip);
+//        userGrass[i]->getMesh()->updateVertexData(0, 0, userGrass[i]->getVertArray());
         userGrass[i]->draw(_shader);
     }
 }

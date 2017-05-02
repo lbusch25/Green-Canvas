@@ -13,7 +13,6 @@
 #include "GLSLProgram.h"
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
-#include "Mesh.h"
 #include "GrassMesh.hpp"
 
 
@@ -26,10 +25,16 @@ namespace basicgraphics {
         void draw(GLSLProgram &shader);
 		void doPhysicsStuff(vec3 velocityAtTip);
         
+        std::shared_ptr<GrassMesh> getMesh();
+        
+        std::vector<GrassMesh::Vertex> getVertArray();
+        
     protected:
-//        std::shared_ptr<Mesh> _mesh;
         std::shared_ptr<GrassMesh> _mesh;
         std::shared_ptr<glm::vec4> _color;
+        
+        std::vector<GrassMesh::Vertex> cpuVertexArray;
+        std::vector<int> cpuIndexArray;
 
         //The control points to be used and updated when a wind force is applied
 		GrassMesh::Vertex controlPoints[4];

@@ -54,7 +54,7 @@ namespace basicgraphics {
         GLuint getVAOID() const;
         
         // Update the vbos. startByteOffset+dataByteSize must be <= allocatedByteSize
-        void updateVertexData(int startByteOffset, int vertexOffset, const std::vector<Vertex> &data);
+        void updateVertexData(int startByteOffset, int vertexOffset, const std::vector<GrassMesh::Vertex> &data);
         void updateIndexData(int totalNumIndices, int startByteOffset, int indexByteSize, int* index);
         
     private:
@@ -70,8 +70,6 @@ namespace basicgraphics {
         int _numIndices;
         
         glm::vec4 _materialColor;
-        
-//        std::vector<std::shared_ptr<Texture>> _textures;
     };
     
 }

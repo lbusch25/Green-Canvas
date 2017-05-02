@@ -11,7 +11,6 @@
 #include "GLSLProgram.h"
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
-#include "Mesh.h"
 #include "GrassMesh.hpp"
 
 namespace basicgraphics {
@@ -23,9 +22,6 @@ namespace basicgraphics {
     //a four point line strip from the input point.
     Grass::Grass(vec3 position) {
         
-        std::vector<GrassMesh::Vertex> cpuVertexArray;
-        std::vector<int> cpuIndexArray;
-
         //This calculates the position of all four points in our grass mesh
         std::vector<vec3> pointPositions;
         pointPositions.push_back(position);
@@ -67,10 +63,9 @@ namespace basicgraphics {
         const int cpuVertexByteSize = sizeof(GrassMesh::Vertex) * cpuVertexArray.size();
         const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
         
-//        _mesh.reset(new Mesh(std::vector<std::shared_ptr<Texture>>(), GL_LINE_STRIP, GL_STATIC_DRAW,
-//                             cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray,
-//                             cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
-        _mesh.reset(new GrassMesh(GL_LINE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+        //Going to want to use GL_DYNAMIC_DRAW for updating since we are
+        //regularly updated the mesh on the GPU
+        _mesh.reset(new GrassMesh(GL_LINE_STRIP, GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
         
 		std::copy(cpuVertexArray.begin(), cpuVertexArray.end(), controlPoints);
 		std::copy(cpuVertexArray.begin(), cpuVertexArray.end(), staticStateControlPoints);
@@ -157,5 +152,13 @@ namespace basicgraphics {
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
 		glDrawElements(GL_PATCHES, _mesh->getNumIndices(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
+    }
+    
+    std::shared_ptr<GrassMesh> Grass::getMesh() {
+        return _mesh;
+    }
+    
+    std::vector<GrassMesh::Vertex> Grass::getVertArray() {
+        return cpuVertexArray;
     }
 }
