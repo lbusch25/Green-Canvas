@@ -22,10 +22,8 @@ public:
 protected:
 	vec3 mousePosToRay(mat4 view, mat4 projection);
 
-	vec2 mousePos;
-    
-    vec3 pt;
-
+	vec2 mousePos;   
+    vec3 brushPos;
 	const float BRUSH_RADIUS = 0.8;
     
     const vec4 lightPosition = vec4(-20, 20, -20, 1.0);
@@ -33,10 +31,6 @@ protected:
     std::vector<std::unique_ptr<Grass>> userGrass;
     
     std::shared_ptr<Texture> diffuseRamp;
-    
-    std::shared_ptr<Texture> specularRamp;
-
-	std::unique_ptr<FluidSimulator> windSim;
 
 	double lastTime;
 

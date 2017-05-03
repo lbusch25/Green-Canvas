@@ -12,35 +12,11 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
 	mouseDown = false; 
 
-	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
-    //grass.reset(new Grass(vec3(0)));
-	//windSim.reset(new FluidSimulator(10, 10, 10));
-	//windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
-
 	lastTime = glfwGetTime();
     
     diffuseRamp = Texture::create2DTextureFromFile("lightingToon.jpg");
     diffuseRamp->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     diffuseRamp->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-//    specularRamp = Texture::create2DTextureFromFile("lightingToon.jpg");
-//    specularRamp->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    specularRamp->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-  //  //Generates a grass square centered around the origin
-  //  for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
-		//for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
-		//	vec3 grassPos = vec3(-1, 0, -1);
-		//	grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);       
-		//	grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
-  //      
-		//	Grass *grassBlade = new Grass(grassPos); 
-		//	grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
-		//}
-  //  }
-
-	//Grass *grassBlade = new Grass(vec3(0));
-	//grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
 
 	generatePoissonPts();
 }
@@ -120,19 +96,22 @@ void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
 		if (mouseDown) {
-			int mouseGridX = floor((pt.x + (POISSON_WIDTH / 2)) / CELL_SIZE);
-			int mouseGridY = floor((pt.z + (POISSON_HEIGHT / 2)) / CELL_SIZE);
+			//Only search the region of the grid that might have points
+			int mouseGridX = floor((brushPos.x + (POISSON_WIDTH / 2)) / CELL_SIZE);
+			int mouseGridY = floor((brushPos.z + (POISSON_HEIGHT / 2)) / CELL_SIZE);
 			int gridRadius = ceil(BRUSH_RADIUS / CELL_SIZE);
 			int minX = std::max(mouseGridX - gridRadius, 0);
 			int minY = std::max(mouseGridY - gridRadius, 0);
 			int maxX = std::min(mouseGridX + gridRadius, GRID_WIDTH - 1);
 			int maxY = std::min(mouseGridY + gridRadius, GRID_HEIGHT - 1);
+			
+			//Search the grid
 			for (int x = minX; x <= maxX; x++) {
 				for (int y = minY; y <= maxY; y++) {
 					if (poissonGrid[x][y] != NO_PT) {
 						vec2 shiftedPos = poissonGrid[x][y] - vec2(POISSON_WIDTH / 2, POISSON_HEIGHT / 2);
 						vec3 actualPos = vec3(shiftedPos.x, 0.0, shiftedPos.y);
-						if (length(actualPos - pt) < BRUSH_RADIUS) {
+						if (length(actualPos - brushPos) < BRUSH_RADIUS) {
 							Grass *userBlade = new Grass(actualPos, glm::linearRand(0.0f, 2 * 3.14159265f));
 							userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
 							poissonGrid[x][y] = NO_PT;
@@ -166,6 +145,8 @@ void App::onRenderGraphics() {
 	double dt = curTime - lastTime;
 	lastTime = curTime;
 
+
+
 	//windSim->step(dt); 
 	
 	vec3 eye_world(0,8,8);
@@ -177,6 +158,15 @@ void App::onRenderGraphics() {
     
     // Setup the model matrix
     glm::mat4 model(1.0);
+
+	//Credit: http://antongerdelan.net/opengl/raycasting.html
+	//Generate ray
+	vec3 worldRay = mousePosToRay(view, projection);
+
+	//Calculate ray intesection with y=0 plane
+	float t = -eye_world.y / worldRay.y;
+	brushPos = eye_world + (worldRay * t);
+	brushPos.y = 0;
     
     // Update shader variables
     _shader.setUniform("view_mat", view);
@@ -186,56 +176,23 @@ void App::onRenderGraphics() {
     
     diffuseRamp->bind(0); //Binds our diffuse texture to our first texture
     _shader.setUniform("diffuseRamp", 0);
-//    specularRamp->bind(1);
-//    _shader.setUniform("specularRamp", 1);
-    
-    //_shader.setUniform("normal_mat", mat3(transpose(inverse(model)))); //Gives the normal in world coords
 
     //Properties of our grass surface, we can adjust these for a more realistic grass later
     vec3 ambientReflectionCoeff = vec3(1,1,1);
     vec3 diffuseReflectionCoeff = vec3(1,1,1);
-//    vec3 specularReflectionCoeff = vec3(1,1,1);
-//    float specularExponent = 50.0;
     
     //Intensity for our white light
     vec3 ambientLightIntensity = vec3(0.3);
     vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
-//    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
     
     //Light position is defined in App.h as a constant vec4
     _shader.setUniform("lightPosition", lightPosition);
     
     _shader.setUniform("ambientReflection", ambientReflectionCoeff);
     _shader.setUniform("diffuseReflection", diffuseReflectionCoeff);
-//    _shader.setUniform("specularReflection", specularReflectionCoeff);
-//    _shader.setUniform("specularExp", specularExponent);
     
     _shader.setUniform("ambientIntensity", ambientLightIntensity);
     _shader.setUniform("diffuseIntensity", diffuseLightIntensity);
-//    _shader.setUniform("specularIntensity", specularLightIntensity);
-    
-    
-	//Draw a sphere where the user's mouse is.
-	//Credit: http://antongerdelan.net/opengl/raycasting.html
-
-	//Generate ray
-	vec3 worldRay = mousePosToRay(view, projection);
-
-	//Calculate ray intesection with y=0 plane
-	float t = -eye_world.y / worldRay.y;
-	pt = eye_world + (worldRay * t);
-	pt.y = 0;
-
-	//Draw sphere at point
-	//sphere->draw(_shader, translate(mat4(1.0), pt) * scale(mat4(1.0), vec3(0.1)));
-    //grass.reset(new Grass(pt, vec3(0)));
-    //grass->draw(_shader);
-    
-    //Draws our grass square 
-    //for(int i = 0; i < grassBlades.size(); i++) {
-    //    //grassBlades[i]->doPhysicsStuff(vec3(1, 0, 0), dt);
-    //    grassBlades[i]->draw(_shader);
-    //}
     
     for(int i = 0; i < userGrass.size(); i++) {
         //userGrass[i]->doPhysicsStuff(vec3(0.1, 0, 0.1), dt);

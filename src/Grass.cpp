@@ -54,8 +54,6 @@ namespace basicgraphics {
 			currentVert.twistVel = 0;
 			currentVert.stiffness = 0.5;*/
             
-
-
             cpuVertexArray.push_back(currentVert);
             cpuIndexArray.push_back(i);
         }
@@ -90,13 +88,13 @@ namespace basicgraphics {
 			controlPoints[i].twistVel += twistAngularAcc[i - 1] * dt;
 
 			//Swing
-			/*mat4 swingTransform = glm::translate(mat4(1.0), base) *
+			mat4 swingTransform = glm::translate(mat4(1.0), base) *
 							   	  glm::rotate(mat4(1.0), controlPoints[i].swingVel * dt, vec3(0, 1, 0)) *
 								  glm::translate(mat4(1.0), -base);
 
 			controlPoints[i].position = vec3(swingTransform * vec4(controlPoints[i].position, 1.0));
 			controlPoints[i].wWithoutTwist = vec3(swingTransform * vec4(controlPoints[i].wWithoutTwist, 0.0));
-			controlPoints[i].wWithTwist = vec3(swingTransform * vec4(controlPoints[i].wWithTwist, 0.0));*/
+			controlPoints[i].wWithTwist = vec3(swingTransform * vec4(controlPoints[i].wWithTwist, 0.0));
 
 			//Bend
 			vec3 lowerPt = controlPoints[i - 1].position;
@@ -108,13 +106,13 @@ namespace basicgraphics {
 			controlPoints[i].wWithTwist = vec3(bendTransform * vec4(controlPoints[i].wWithTwist, 0.0));
 
 			//Twist
-		//	vec3 edgeVec = controlPoints[i].position - lowerPt;
-		//	mat4 twistTransform = glm::rotate(mat4(1.0), controlPoints[i].twistVel * dt, edgeVec);
-		//	controlPoints[i].wWithTwist = vec3(twistTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+			vec3 edgeVec = controlPoints[i].position - lowerPt;
+			mat4 twistTransform = glm::rotate(mat4(1.0), controlPoints[i].twistVel * dt, edgeVec);
+			controlPoints[i].wWithTwist = vec3(twistTransform * vec4(controlPoints[i].wWithTwist, 0.0));
 
-		//	//Should still be normal but better safe than sorry
-		//	controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
-		//	controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
+			//Should still be normal but better safe than sorry
+			controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
+			controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
 		}
 		_mesh->updateVertexData(0, 0, controlPoints);
 	}
@@ -222,6 +220,7 @@ namespace basicgraphics {
 				restorationForceBending = localTip.stiffness * currentBendAngularDispAdj * normalize(staticEdgeVec - edgeVec);
 			}
 
+			//Most of this was me trying to get bending to work - that's why it's different from the other functions
 			vec3 torqueDir;
 			float ra = angularAccFromTorque(edgeVec, restorationForceBending, torqueDir);
 			if (dot(torqueDir, hiVert.wWithoutTwist) < 0) {
