@@ -44,14 +44,14 @@ namespace basicgraphics {
         //The default status of the grass, use when no wind force applied
 		GrassMesh::Vertex staticStateControlPoints[4];
 
-		const float massOfABladeOfGrass = 0.01;
+		const float massOfABladeOfGrass = 0.1;
 
 		void calcSwinging(vec3 windVelocity, float(&angularAcc)[3]);
 		void calcBending(vec3 windVelocity, float(&acceleration)[3]);
 		void calcBendingCustomTip(vec3 windVelocity, int tipEdge, int nextTipEdge, float(&acceleration)[3]);
 		void calcTwisting(vec3 windVelocity, float(&angularAcc)[3]);
 		
-		float angularAccFromTorque(vec3 radiusVec, vec3 force);
+		float angularAccFromTorque(vec3 radiusVec, vec3 force, vec3& outTorqueDir);
     };
 }
 

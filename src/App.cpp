@@ -25,17 +25,20 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 //    specularRamp->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 //    specularRamp->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
-    //Generates a grass square centered around the origin
-    for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
-		for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
-			vec3 grassPos = vec3(-1, 0, -1);
-			grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);       
-			grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
-        
-			Grass *grassBlade = new Grass(grassPos); 
-			grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
-		}
-    }
+  //  //Generates a grass square centered around the origin
+  //  for (int i = 0; i <= GRASS_PER_SQUARE_EDGE; i ++) {
+		//for (int j = 0; j <= GRASS_PER_SQUARE_EDGE; j++) {
+		//	vec3 grassPos = vec3(-1, 0, -1);
+		//	grassPos.z += (i * 1.0/GRASS_PER_SQUARE_EDGE);       
+		//	grassPos.x += (j * 1.0/GRASS_PER_SQUARE_EDGE); //Do every x for z so its stored in row major order
+  //      
+		//	Grass *grassBlade = new Grass(grassPos); 
+		//	grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
+		//}
+  //  }
+
+	Grass *grassBlade = new Grass(vec3(0));
+	grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
 }
 
 void App::onEvent(shared_ptr<Event> event) {
@@ -137,13 +140,12 @@ void App::onRenderGraphics() {
     
     //Draws our grass square 
     for(int i = 0; i < grassBlades.size(); i++) {
-//        grassBlades[i]->doPhysicsStuff(velocityAtTip);
-//        grassBlades[i]->getMesh()->updateVertexData(0, 0, grassBlades[i]->getVertArray());
+        grassBlades[i]->doPhysicsStuff(vec3(1, 0, 0), dt);
         grassBlades[i]->draw(_shader);
     }
     
     for(int i = 0; i < userGrass.size(); i++) {
-        userGrass[i]->doPhysicsStuff(vec3(1, 0, 1), dt);
+        userGrass[i]->doPhysicsStuff(vec3(0.1, 0, 0.1), dt);
         userGrass[i]->draw(_shader);
     }
 }

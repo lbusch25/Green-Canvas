@@ -90,17 +90,17 @@ namespace basicgraphics {
 		//Don't need to modify the base
 		for (int i = 3; i >= 1; i--) {
 			controlPoints[i].swingVel += swingAngularAcc[i - 1] * dt;
-			controlPoints[i].bendVel  += bendAngularAcc[i - 1] * dt;
+			controlPoints[i].bendVel  +=  bendAngularAcc[i - 1] * dt;
 			controlPoints[i].twistVel += twistAngularAcc[i - 1] * dt;
 
 			//Swing
-			mat4 swingTransform = glm::translate(mat4(1.0), base) *
+			/*mat4 swingTransform = glm::translate(mat4(1.0), base) *
 							   	  glm::rotate(mat4(1.0), controlPoints[i].swingVel * dt, vec3(0, 1, 0)) *
 								  glm::translate(mat4(1.0), -base);
 
 			controlPoints[i].position = vec3(swingTransform * vec4(controlPoints[i].position, 1.0));
 			controlPoints[i].wWithoutTwist = vec3(swingTransform * vec4(controlPoints[i].wWithoutTwist, 0.0));
-			controlPoints[i].wWithTwist = vec3(swingTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+			controlPoints[i].wWithTwist = vec3(swingTransform * vec4(controlPoints[i].wWithTwist, 0.0));*/
 
 			//Bend
 			vec3 lowerPt = controlPoints[i - 1].position;
@@ -112,15 +112,14 @@ namespace basicgraphics {
 			controlPoints[i].wWithTwist = vec3(bendTransform * vec4(controlPoints[i].wWithTwist, 0.0));
 
 			//Twist
-			vec3 edgeVec = controlPoints[i].position - lowerPt;
-			mat4 twistTransform = glm::rotate(mat4(1.0), controlPoints[i].twistVel * dt, edgeVec);
-			controlPoints[i].wWithTwist = vec3(twistTransform * vec4(controlPoints[i].wWithTwist, 0.0));
+		//	vec3 edgeVec = controlPoints[i].position - lowerPt;
+		//	mat4 twistTransform = glm::rotate(mat4(1.0), controlPoints[i].twistVel * dt, edgeVec);
+		//	controlPoints[i].wWithTwist = vec3(twistTransform * vec4(controlPoints[i].wWithTwist, 0.0));
 
-			//Should still be normal but better safe than sorry
-			controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
-			controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
+		//	//Should still be normal but better safe than sorry
+		//	controlPoints[i].wWithTwist = normalize(controlPoints[i].wWithTwist);
+		//	controlPoints[i].wWithoutTwist = normalize(controlPoints[i].wWithoutTwist);
 		}
-		//A bit hacky but works for now;
 		_mesh->updateVertexData(0, 0, controlPoints);
 	}
 
@@ -158,7 +157,9 @@ namespace basicgraphics {
 			vec3 totalSwingForce = windForceSwinging + restorationForceSwing;
 
 			vec3 edgeVec = hiVert.position - lowVert.position;
-			angularAcc[edge] = angularAccFromTorque(edgeVec, totalSwingForce);
+
+			vec3 torqueDir;
+			angularAcc[edge] = angularAccFromTorque(edgeVec, totalSwingForce, torqueDir);
 		}
 	}
 
@@ -207,8 +208,8 @@ namespace basicgraphics {
 			GrassMesh::Vertex staticLowVert = staticStateControlPoints[edge];
 			GrassMesh::Vertex staticHiVert = staticStateControlPoints[edge + 1];
 
-			vec3 staticEdgeVec = staticLowVert.position - staticHiVert.position;
-			vec3 edgeVec = lowVert.position - hiVert.position;
+			vec3 staticEdgeVec = staticHiVert.position - staticLowVert.position;
+			vec3 edgeVec = hiVert.position - lowVert.position;
 			vec3 edgeNormalWithoutTwist = normalize(cross(lowVert.wWithoutTwist, edgeVec));
 
 			// Wind force
@@ -225,10 +226,27 @@ namespace basicgraphics {
 				restorationForceBending = localTip.stiffness * currentBendAngularDispAdj * normalize(staticEdgeVec - edgeVec);
 			}
 
-			// Total
-			vec3 totalBendForce = windForceBending + restorationForceBending; 
+			vec3 torqueDir;
+			float ra = angularAccFromTorque(edgeVec, restorationForceBending, torqueDir);
+			if (dot(torqueDir, hiVert.wWithoutTwist) < 0) {
+				ra *= -1;
+			}
+			/*if (sign(tipBendAngularDisp) == sign(ra)) {
+				restorationForceBending = -restorationForceBending;
+			}*/
 
-			angularAcc[edge] = angularAccFromTorque(localTip.wWithoutTwist, totalBendForce);
+			// Total
+			vec3 totalBendForce = windForceBending + restorationForceBending;
+			
+			//vec3 torqueDir;
+			float absAcc = angularAccFromTorque(edgeVec, totalBendForce, torqueDir);
+			if (dot(torqueDir, hiVert.wWithoutTwist) < 0) {
+				absAcc *= -1;
+			}
+			angularAcc[edge] = absAcc;
+			//float wa = angularAccFromTorque(edgeVec, windForceBending, torqueDir);
+			//float ra = angularAccFromTorque(edgeVec, restorationForceBending, torqueDir);
+			//float ta = angularAccFromTorque(edgeVec, totalBendForce, torqueDir);
 		}
 	}
 	void Grass::calcTwisting(vec3 windVelocity, float (&angularAcc)[3]) {
@@ -263,18 +281,22 @@ namespace basicgraphics {
 			// Total
 			vec3 totalTwistForce = windForceTwist + restorationForceTwist;
 
-			angularAcc[edge] = angularAccFromTorque(hiVert.wWithTwist, totalTwistForce);
+			vec3 torqueDir;
+			angularAcc[edge] = angularAccFromTorque(hiVert.wWithTwist, totalTwistForce, torqueDir);
 		}
 	}
 
-	float Grass::angularAccFromTorque(vec3 radiusVec, vec3 force) {
-		float torque = length(cross(radiusVec, force));
+	float Grass::angularAccFromTorque(vec3 radiusVec, vec3 force, vec3& outTorqueDir) {
+		vec3 crossed = cross(radiusVec, force);
+		float torque = length(crossed);
+		outTorqueDir = normalize(crossed);
 		float momentOfInertia = pow(length(radiusVec), 2) * massOfABladeOfGrass;
 		return torque / momentOfInertia;
 	}
     
     void Grass::draw(GLSLProgram &shader) {
 
+		shader.use();
 		glBindVertexArray(_mesh->getVAOID());
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
 		glDrawElements(GL_PATCHES, _mesh->getNumIndices(), GL_UNSIGNED_INT, 0);
