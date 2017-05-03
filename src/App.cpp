@@ -41,14 +41,105 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
 	//Grass *grassBlade = new Grass(vec3(0));
 	//grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
+
+	generatePoissonPts();
+}
+
+void App::generatePoissonPts() {
+	//Initialize grid
+	for (int x = 0; x < GRID_WIDTH; x++) {
+		poissonGrid.push_back(std::vector<vec2>());
+		for (int y = 0; y < GRID_HEIGHT; y++) {
+			poissonGrid[x].push_back(NO_PT);
+		}
+	}
+
+	//Based on the implmentation by Mike Bostock https://bl.ocks.org/mbostock/19168c663618b7f07158
+	float RADIUS_SQUARED = POISSON_RADIUS * POISSON_RADIUS;
+	//Initial sample
+	std::vector<vec2> activeSamples;
+	activeSamples.push_back(vec2(0));
+	poissonGrid[0][0] = activeSamples[0];
+
+	while (activeSamples.size() > 0) {
+		//Pick a random sample
+		int randIndex = rand() % activeSamples.size();
+		vec2 sample = activeSamples[randIndex];
+
+		vec2 newSample = NO_PT;
+		for (int c = 0; c < MAX_CANDIDATES; c++) {
+			float angle = glm::linearRand(0.0, 2 * 3.14159265358979323846);
+			float radius = sqrt(glm::linearRand(0.0f, 3 * RADIUS_SQUARED) + RADIUS_SQUARED);
+			vec2 cand = sample + (radius * vec2(cos(angle), sin(angle)));
+
+			//Reject if outside bounds
+			if (cand.x < 0 || cand.y < 0 || cand.x >= POISSON_WIDTH || cand.y >= POISSON_HEIGHT) {
+				continue;
+			}
+
+			//Reject if too close to other points
+			i32vec2 gridPos = floor(cand / CELL_SIZE);
+			int minX = std::max(gridPos.x - 2, 0);
+			int minY = std::max(gridPos.y - 2, 0);
+			int maxX = std::min(gridPos.x + 3, GRID_WIDTH);
+			int maxY = std::min(gridPos.y + 3, GRID_HEIGHT);
+
+			bool reject = false;
+			for (int y = minY; y < maxY; y++) {
+				for (int x = minX; x < maxX; x++) {
+					vec2 checkPt = poissonGrid[x][y];
+					if (checkPt != NO_PT) {
+						if (length(checkPt - cand) < POISSON_RADIUS) {
+							reject = true;
+							break;
+						}
+					}
+				}
+				if (reject)
+					break;
+			}
+			if (reject)
+				continue;
+
+			//We're good - add the point 
+			newSample = cand;
+			break;
+		}
+		if (newSample == NO_PT) {
+			activeSamples.erase(activeSamples.begin() + randIndex);
+		}
+		else {
+			activeSamples.push_back(newSample);
+			i32vec2 gridPos = floor(newSample / CELL_SIZE);
+			poissonGrid[gridPos.x][gridPos.y] = newSample;
+		}
+	}
 }
 
 void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
 		if (mouseDown) {
-			Grass *userBlade = new Grass(pt, glm::linearRand(0.0f, 2*3.14159265f));
-			userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
+			int mouseGridX = floor((pt.x + (POISSON_WIDTH / 2)) / CELL_SIZE);
+			int mouseGridY = floor((pt.z + (POISSON_HEIGHT / 2)) / CELL_SIZE);
+			int gridRadius = ceil(BRUSH_RADIUS / CELL_SIZE);
+			int minX = std::max(mouseGridX - gridRadius, 0);
+			int minY = std::max(mouseGridY - gridRadius, 0);
+			int maxX = std::min(mouseGridX + gridRadius, GRID_WIDTH - 1);
+			int maxY = std::min(mouseGridY + gridRadius, GRID_HEIGHT - 1);
+			for (int x = minX; x <= maxX; x++) {
+				for (int y = minY; y <= maxY; y++) {
+					if (poissonGrid[x][y] != NO_PT) {
+						vec2 shiftedPos = poissonGrid[x][y] - vec2(POISSON_WIDTH / 2, POISSON_HEIGHT / 2);
+						vec3 actualPos = vec3(shiftedPos.x, 0.0, shiftedPos.y);
+						if (length(actualPos - pt) < BRUSH_RADIUS) {
+							Grass *userBlade = new Grass(actualPos, glm::linearRand(0.0f, 2 * 3.14159265f));
+							userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
+							poissonGrid[x][y] = NO_PT;
+						}
+					}
+				}
+			}
 		}
     }
 	if (event-> getName() == "mouse_btn_left_down") {
@@ -77,7 +168,7 @@ void App::onRenderGraphics() {
 
 	//windSim->step(dt); 
 	
-	vec3 eye_world(-3,8,8);
+	vec3 eye_world(0,8,8);
     // Setup the camera with a good initial position and view direction to see the table
     glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     
