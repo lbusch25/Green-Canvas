@@ -8,9 +8,9 @@ using namespace glm;
 
 App::App(int argc, char** argv, std::string windowName, int windowWidth, int windowHeight) : BaseApp(argc, argv, windowName, windowWidth, windowHeight) {
 
-    glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+    glClearColor(0.3412f * 0.6, 0.2314f * 0.6, 0.047f, 1.0f); 
 
-	mouseDown = false;
+	mouseDown = false; 
 
 	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
     //grass.reset(new Grass(vec3(0)));
@@ -198,7 +198,7 @@ void App::onRenderGraphics() {
 //    float specularExponent = 50.0;
     
     //Intensity for our white light
-    vec3 ambientLightIntensity = vec3(0.4, 0.4, 0.4);
+    vec3 ambientLightIntensity = vec3(0.3);
     vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
 //    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
     

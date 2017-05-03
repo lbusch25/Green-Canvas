@@ -31,17 +31,21 @@ void main () {
     float dotHN = dot(Hvec, normal);
     
     vec3 final_color = vec3(0.0, 0.0, 0.0);
-    vec2 diffuseTex = vec2(max(0, dotNL), 0.0);
+    //vec2 diffuseTex = vec2(max(0, dotNL), 0.0);
     //vec2 specularTex = vec2(pow(max(0,dotHN), specularExp), 0.0);
     
     vec3 ambientColor = ambientReflection * ambientIntensity;
-    vec3 diffuseColor = diffuseReflection * diffuseIntensity * texture(diffuseRamp, diffuseTex).xyz;
+    //diffuseTex += (ambientColor.x + ambientColor.y + ambientColor.z)/3;
+    //diffuseTex = min(diffuseTex, 1.0);
+    vec3 diffuseColor = diffuseReflection * diffuseIntensity * max(0, dotNL);
 //    vec3 specularColor = vec3 specularColor = specularReflection *specularIntensity * texture(specularRamp, specularTex).xyz;
     
     
 //    final_colour = ambientColor + diffuseColor + specularColor;
     
-    final_color = ambientColor + diffuseColor;
+    final_color = diffuseColor + ambientColor;
+    float c = (final_color.x + final_color.y + final_color.z) / 3;
+    c = min(c, 1.0);
 	
-    fragment_colour = vec4(final_color, 1.0);
+    fragment_colour = vec4(texture(diffuseRamp, vec2(c, 0.0)).rgb, 1.0);
 }
