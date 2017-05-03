@@ -21,15 +21,11 @@
 namespace basicgraphics {
     class Grass {
     public:
-        Grass(glm::vec3 position);
+        Grass(glm::vec3 position, float angle);
         ~Grass();
         
         void draw(GLSLProgram &shader);
 		void doPhysicsStuff(vec3 velocityAtTip, float dt);
-        
-        std::shared_ptr<GrassMesh> getMesh();
-        
-        std::vector<GrassMesh::Vertex> getVertArray();
         
     protected:
         std::shared_ptr<GrassMesh> _mesh;

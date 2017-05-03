@@ -10,10 +10,12 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 
+	mouseDown = false;
+
 	//sphere.reset(new Sphere(vec3(0), 1.0, vec4(1.0)));
-    grass.reset(new Grass(vec3(0)));
-	windSim.reset(new FluidSimulator(10, 10, 10));
-	windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
+    //grass.reset(new Grass(vec3(0)));
+	//windSim.reset(new FluidSimulator(10, 10, 10));
+	//windSim->addVelocitySource(0, 0, 0, vec3(1, 1, 1));
 
 	lastTime = glfwGetTime();
     
@@ -37,15 +39,15 @@ App::App(int argc, char** argv, std::string windowName, int windowWidth, int win
 		//}
   //  }
 
-	Grass *grassBlade = new Grass(vec3(0));
-	grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
+	//Grass *grassBlade = new Grass(vec3(0));
+	//grassBlades.emplace_back(std::move(grassBlade)); //std::move moves the ptr to this new vector
 }
 
 void App::onEvent(shared_ptr<Event> event) {
 	if (event->getName() == "mouse_pointer") {
 		mousePos = vec2(event->get2DData());
 		if (mouseDown) {
-			Grass *userBlade = new Grass(pt);
+			Grass *userBlade = new Grass(pt, glm::linearRand(0.0f, 2*3.14159265f));
 			userGrass.emplace_back(std::move(userBlade)); //std::move moves the ptr to this new vector
 		}
     }
@@ -75,7 +77,7 @@ void App::onRenderGraphics() {
 
 	//windSim->step(dt); 
 	
-	vec3 eye_world(-3,5,5);
+	vec3 eye_world(-3,8,8);
     // Setup the camera with a good initial position and view direction to see the table
     glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     
@@ -139,13 +141,13 @@ void App::onRenderGraphics() {
     //grass->draw(_shader);
     
     //Draws our grass square 
-    for(int i = 0; i < grassBlades.size(); i++) {
-        grassBlades[i]->doPhysicsStuff(vec3(1, 0, 0), dt);
-        grassBlades[i]->draw(_shader);
-    }
+    //for(int i = 0; i < grassBlades.size(); i++) {
+    //    //grassBlades[i]->doPhysicsStuff(vec3(1, 0, 0), dt);
+    //    grassBlades[i]->draw(_shader);
+    //}
     
     for(int i = 0; i < userGrass.size(); i++) {
-        userGrass[i]->doPhysicsStuff(vec3(0.1, 0, 0.1), dt);
+        //userGrass[i]->doPhysicsStuff(vec3(0.1, 0, 0.1), dt);
         userGrass[i]->draw(_shader);
     }
 }

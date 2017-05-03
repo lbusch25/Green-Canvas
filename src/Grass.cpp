@@ -13,6 +13,8 @@
 #include <glfw/glfw3.h>
 #include "GrassMesh.hpp"
 
+#include <glm/glm/gtc/random.hpp>
+
 namespace basicgraphics {
     using namespace glm;
     using namespace std;
@@ -20,49 +22,43 @@ namespace basicgraphics {
     //Takes in the position of the bottom point of the grass stalk and the direction of the wind
     //vector that will be acting upon the grass. The grass is then built up directly vertical as
     //a four point line strip from the input point.
-    Grass::Grass(vec3 position) {
+    Grass::Grass(vec3 position, float angle) {
         
         //This calculates the position of all four points in our grass mesh
         std::vector<vec3> pointPositions;
-        pointPositions.push_back(position);
+        pointPositions.push_back(vec3(0));
+		
+		float curAngle = glm::linearRand(radians(70.0f), radians(85.0f));
+		float sectionLen = 0.4;
+
+		for (int i = 1; i < 4; i++) {
+			vec3 prevPt = pointPositions[i - 1];
+
+			vec3 newVec = sectionLen * vec3(cos(curAngle), sin(curAngle), 0);
+
+			pointPositions.push_back(prevPt + newVec);
+
+			curAngle -= glm::linearRand(radians(5.0f), radians(30.0f));
+		}
+
+		mat4 rotMatrix = glm::rotate(mat4(1.0), angle, vec3(0, 1, 0));
         
-        vec3 position1 = position + vec3(0.25, 0.6, 0);
-        pointPositions.push_back(position1);
-        
-        vec3 position2 = position + vec3(0.6, 0.85, 0);
-        pointPositions.push_back(position2);
-        
-        vec3 position3 = position + vec3(0.75, 0.7, 0);
-        pointPositions.push_back(position3);
-        
-        for (int i = 0; i < pointPositions.size() - 1; i++) {
+        for (int i = 0; i < pointPositions.size(); i++) {
             GrassMesh::Vertex currentVert; //The vertex we are working on
             
-            currentVert.position = pointPositions[i];
-            currentVert.wWithoutTwist = vec3(0, 0, 1);
-			currentVert.wWithTwist = currentVert.wWithoutTwist;
-			currentVert.swingVel = 0;
+            currentVert.position = position + vec3(rotMatrix * vec4(pointPositions[i], 1.0));
+            //currentVert.wWithoutTwist = vec3(0, 0, 1);
+			currentVert.wWithTwist = vec3(rotMatrix * vec4(0, 0, 1, 0));
+			/*currentVert.swingVel = 0;
 			currentVert.bendVel = 0;
 			currentVert.twistVel = 0;
-			currentVert.stiffness = 0.5;
+			currentVert.stiffness = 0.5;*/
             
+
+
             cpuVertexArray.push_back(currentVert);
             cpuIndexArray.push_back(i);
         }
-        
-        GrassMesh::Vertex lastVert; //The end vertex of our grass blade
-        
-        lastVert.position = pointPositions[pointPositions.size() - 1];
-
-		lastVert.wWithoutTwist = vec3(0, 0, 1);
-		lastVert.wWithTwist = lastVert.wWithoutTwist;
-		lastVert.swingVel = 0;
-		lastVert.bendVel = 0;
-		lastVert.twistVel = 0;
-		lastVert.stiffness = 0.5;
-
-        cpuVertexArray.push_back(lastVert);
-        cpuIndexArray.push_back(cpuIndexArray.size());
         
         const int cpuVertexByteSize = sizeof(GrassMesh::Vertex) * cpuVertexArray.size();
         const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();

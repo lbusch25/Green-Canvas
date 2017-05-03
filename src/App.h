@@ -6,6 +6,7 @@
 #include <glfw/glfw3.h>
 #include "Grass.hpp"
 #include "FluidSimulator.h"
+#include <glm/glm/gtc/random.hpp>
 
 namespace basicgraphics {
 class App : public BaseApp {
