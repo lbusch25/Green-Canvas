@@ -1,1 +1,7 @@
 # Green-Canvas
+
+Coded in C++, Green Canvas is an interactive painting tool that allows users to paint cartoon style grass blades onto a 3D canvas. To paint the grass, a ray is traced from the mouse's position in 2D window space to the 3D coordinate plane. On this plane, we have set up a series of points using a poisson point distribution in order to get a distribution of grass blades that looks natural. Poisson points within a certain range of our ray cast have a grass blade generated at that point.
+
+To render the grass itself we use a custom grass mesh class to hold the data for the grass's control points. We generate the grass with four control points, aligned in the same directon but with a randomly generated curvature. We then send these control points through our shader pipeline, which includes a vertex, two tesselation shaders, geometery, and fragment shader. The vertex shader sends the position to the tesselation control, which determines how many subdivisions should be made between the each set of points, and thus how many new points should be generate. Then the tessleation evaluation shader generates the new points, both position and surface normals, as determined by the tesselation control shader. These points are then sent to the geometry shader which draws the surface of our grass blades between the two points. Lastly, these grass blades are illumeted using the Blinn-Phong model, which is implemented in the fragment shader.
+
+By combining ray tracing with shaders, we are able to bring the user the experience that is Green-Canvas!
